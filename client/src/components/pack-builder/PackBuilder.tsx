@@ -8,10 +8,12 @@ import {
   ACTION_RECOMMENDED_CLIPS,
 } from '@/types/voicepack';
 import { ActionRecorder } from '@/components/recorder/ActionRecorder';
-import { uploadVoicePack } from '@/lib/api';
+import { uploadVoicePack, publishVoicePack } from '@/lib/api';
 
 function createEmptyClips(): Record<VoiceAction, AudioClip[]> {
-  return Object.fromEntries(VOICE_ACTIONS.map((a) => [a, []])) as Record<VoiceAction, AudioClip[]>;
+  const clips: Partial<Record<VoiceAction, AudioClip[]>> = {};
+  for (const action of VOICE_ACTIONS) clips[action] = [];
+  return clips as Record<VoiceAction, AudioClip[]>;
 }
 
 export function PackBuilder() {
@@ -24,7 +26,9 @@ export function PackBuilder() {
   });
 
   const [buildStatus, setBuildStatus] = useState<'idle' | 'building' | 'done' | 'error'>('idle');
+  const [buildId, setBuildId] = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [publishStatus, setPublishStatus] = useState<'idle' | 'publishing' | 'published' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
   const totalClips = Object.values(pack.clips).reduce((sum, arr) => sum + arr.length, 0);
@@ -57,8 +61,8 @@ export function PackBuilder() {
       setErrorMsg('Give your voice pack a name!');
       return;
     }
-    if (!meetsMinimum) {
-      setErrorMsg('Some actions still need more clips. Check the counts above.');
+    if (totalClips === 0) {
+      setErrorMsg('Record at least one clip before building!');
       return;
     }
 
@@ -67,12 +71,33 @@ export function PackBuilder() {
 
     try {
       const result = await uploadVoicePack(pack);
+      setBuildId(result.id);
       setDownloadUrl(result.downloadUrl);
       setBuildStatus('done');
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Build failed');
       setBuildStatus('error');
     }
+  };
+
+  const handlePublish = async () => {
+    if (!buildId) return;
+    setPublishStatus('publishing');
+    try {
+      await publishVoicePack(buildId);
+      setPublishStatus('published');
+    } catch {
+      setPublishStatus('error');
+    }
+  };
+
+  const handleReset = () => {
+    setPack({ name: '', author: '', gender: 'male', description: '', clips: createEmptyClips() });
+    setBuildStatus('idle');
+    setBuildId(null);
+    setDownloadUrl(null);
+    setPublishStatus('idle');
+    setErrorMsg('');
   };
 
   return (
@@ -89,6 +114,7 @@ export function PackBuilder() {
               onChange={(e) => setPack((p) => ({ ...p, name: e.target.value }))}
               placeholder="e.g. Silly Derp Cat"
               className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
+              disabled={buildStatus === 'done'}
             />
           </div>
           <div>
@@ -99,6 +125,7 @@ export function PackBuilder() {
               onChange={(e) => setPack((p) => ({ ...p, author: e.target.value }))}
               placeholder="Your name"
               className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
+              disabled={buildStatus === 'done'}
             />
           </div>
           <div>
@@ -107,6 +134,7 @@ export function PackBuilder() {
               value={pack.gender}
               onChange={(e) => setPack((p) => ({ ...p, gender: e.target.value as VoiceGender }))}
               className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text focus:outline-none focus:border-mew-accent"
+              disabled={buildStatus === 'done'}
             >
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -121,6 +149,7 @@ export function PackBuilder() {
               onChange={(e) => setPack((p) => ({ ...p, description: e.target.value }))}
               placeholder="A goofy cat voice with lots of derp energy"
               className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
+              disabled={buildStatus === 'done'}
             />
           </div>
         </div>
@@ -143,29 +172,59 @@ export function PackBuilder() {
       </div>
 
       {/* Action recorders */}
-      <div className="space-y-4 mb-8">
-        {VOICE_ACTIONS.map((action) => (
-          <ActionRecorder
-            key={action}
-            action={action}
-            clips={pack.clips[action]}
-            onAddClip={handleAddClip}
-            onRemoveClip={(clipId) => handleRemoveClip(action, clipId)}
-          />
-        ))}
-      </div>
+      {buildStatus !== 'done' && (
+        <div className="space-y-4 mb-8">
+          {VOICE_ACTIONS.map((action) => (
+            <ActionRecorder
+              key={action}
+              action={action}
+              clips={pack.clips[action]}
+              onAddClip={handleAddClip}
+              onRemoveClip={(clipId) => handleRemoveClip(action, clipId)}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* Build button */}
+      {/* Build / Download / Publish section */}
       <div className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
         {buildStatus === 'done' && downloadUrl ? (
-          <div className="text-center">
-            <p className="text-green-400 text-lg mb-4">✓ Voice pack built successfully!</p>
-            <a
-              href={downloadUrl}
-              className="inline-block bg-green-600 hover:bg-green-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+          <div className="text-center space-y-4">
+            <p className="text-green-400 text-lg font-bold">Voice pack built successfully!</p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <a
+                href={downloadUrl}
+                className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+              >
+                Download ZIP
+              </a>
+
+              {publishStatus === 'published' ? (
+                <div className="inline-flex items-center justify-center gap-2 bg-mew-highlight text-green-400 py-3 px-8 rounded-lg font-bold text-lg">
+                  Published!
+                </div>
+              ) : (
+                <button
+                  onClick={handlePublish}
+                  disabled={publishStatus === 'publishing'}
+                  className="inline-flex items-center justify-center gap-2 bg-mew-accent hover:bg-mew-accent/80 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+                >
+                  {publishStatus === 'publishing' ? 'Publishing...' : 'Publish to Library'}
+                </button>
+              )}
+            </div>
+
+            {publishStatus === 'error' && (
+              <p className="text-red-400 text-sm">Failed to publish. Try again?</p>
+            )}
+
+            <button
+              onClick={handleReset}
+              className="text-mew-muted hover:text-mew-text text-sm underline transition-colors"
             >
-              ⬇ Download Voice Pack
-            </a>
+              Create another voice pack
+            </button>
           </div>
         ) : (
           <>
@@ -174,9 +233,9 @@ export function PackBuilder() {
               disabled={buildStatus === 'building' || !pack.name.trim()}
               className="w-full bg-mew-accent hover:bg-mew-accent/80 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
             >
-              {buildStatus === 'building' ? '⏳ Building voice pack...' : '🐱 Build Voice Pack'}
+              {buildStatus === 'building' ? 'Building voice pack...' : 'Build Voice Pack'}
             </button>
-            {!meetsMinimum && (
+            {!meetsMinimum && totalClips > 0 && (
               <p className="text-yellow-400 text-sm mt-2 text-center">
                 Some actions need more clips. You can still build, but the pack may feel sparse.
               </p>

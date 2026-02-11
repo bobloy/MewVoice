@@ -1,0 +1,157 @@
+import { useState, useEffect, useCallback } from 'react';
+import { VoicePackMeta, VOICE_ACTIONS } from '@/types/voicepack';
+import { listVoicePacks, getPublishedDownloadUrl } from '@/lib/api';
+
+export function LibraryBrowser() {
+  const [packs, setPacks] = useState<VoicePackMeta[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchPacks = useCallback(async (p: number) => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await listVoicePacks(p, 12);
+      setPacks(result.packs);
+      setTotal(result.total);
+    } catch {
+      setError('Failed to load voice packs.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPacks(page);
+  }, [page, fetchPacks]);
+
+  const totalPages = Math.ceil(total / 12);
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-20">
+        <div className="text-4xl mb-4 animate-bounce">🐱</div>
+        <p className="text-mew-muted">Loading voice packs...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-20">
+        <p className="text-red-400 mb-4">{error}</p>
+        <button
+          onClick={() => fetchPacks(page)}
+          className="bg-mew-accent hover:bg-mew-accent/80 text-white py-2 px-6 rounded-lg transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (packs.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-20">
+        <div className="text-6xl mb-4">😿</div>
+        <h2 className="text-xl font-bold text-mew-text mb-2">No voice packs yet</h2>
+        <p className="text-mew-muted">
+          Be the first! Create a voice pack and publish it to the community library.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-mew-text">Community Voice Packs</h2>
+        <span className="text-mew-muted text-sm">{total} pack{total !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        {packs.map((pack) => (
+          <PackCard key={pack.id} pack={pack} />
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="px-4 py-2 rounded-lg bg-mew-surface border border-mew-highlight/30 text-mew-text disabled:opacity-30 hover:border-mew-accent/50 transition-colors"
+          >
+            Prev
+          </button>
+          <span className="px-4 py-2 text-mew-muted">
+            {page} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="px-4 py-2 rounded-lg bg-mew-surface border border-mew-highlight/30 text-mew-text disabled:opacity-30 hover:border-mew-accent/50 transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PackCard({ pack }: { pack: VoicePackMeta }) {
+  const totalClips = Object.values(pack.clipCounts).reduce((sum, n) => sum + n, 0);
+  const genderIcon = pack.gender === 'female' ? '♀' : pack.gender === 'male' ? '♂' : '⚥';
+
+  return (
+    <div className="bg-mew-surface rounded-xl p-5 border border-mew-highlight/30 hover:border-mew-accent/40 transition-colors">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-bold text-mew-text truncate">{pack.name}</h3>
+          <p className="text-mew-muted text-sm">
+            by {pack.author || 'Anonymous'} {genderIcon}
+          </p>
+        </div>
+        <span className="text-2xl ml-2">🐱</span>
+      </div>
+
+      {pack.description && (
+        <p className="text-mew-muted text-sm mb-3 line-clamp-2">{pack.description}</p>
+      )}
+
+      {/* Clip count grid */}
+      <div className="grid grid-cols-3 gap-1 mb-4 text-xs">
+        {VOICE_ACTIONS.map((action) => {
+          const count = pack.clipCounts[action] || 0;
+          return (
+            <div
+              key={action}
+              className={`px-2 py-1 rounded text-center ${
+                count > 0 ? 'bg-mew-highlight/40 text-mew-text' : 'bg-mew-bg/50 text-mew-muted/50'
+              }`}
+            >
+              {action} {count > 0 && <span className="font-bold">{count}</span>}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-mew-muted space-x-3">
+          <span>{totalClips} clips</span>
+          <span>{pack.downloads} download{pack.downloads !== 1 ? 's' : ''}</span>
+        </div>
+        <a
+          href={getPublishedDownloadUrl(pack.id)}
+          className="bg-mew-accent hover:bg-mew-accent/80 text-white py-1.5 px-4 rounded-lg text-sm font-medium transition-colors"
+        >
+          Download
+        </a>
+      </div>
+    </div>
+  );
+}

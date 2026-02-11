@@ -1,6 +1,12 @@
+import { useState } from 'react';
 import { PackBuilder } from '@/components/pack-builder/PackBuilder';
+import { LibraryBrowser } from '@/components/library/LibraryBrowser';
+
+type Page = 'create' | 'browse';
 
 function App() {
+  const [page, setPage] = useState<Page>('create');
+
   return (
     <div className="min-h-screen bg-mew-bg">
       {/* Header */}
@@ -14,8 +20,20 @@ function App() {
             </div>
           </div>
           <nav className="flex gap-4">
-            <button className="text-mew-accent font-medium text-sm">Create</button>
-            <button className="text-mew-muted hover:text-mew-text text-sm transition-colors">
+            <button
+              onClick={() => setPage('create')}
+              className={`font-medium text-sm transition-colors ${
+                page === 'create' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
+              }`}
+            >
+              Create
+            </button>
+            <button
+              onClick={() => setPage('browse')}
+              className={`font-medium text-sm transition-colors ${
+                page === 'browse' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
+              }`}
+            >
               Browse Packs
             </button>
           </nav>
@@ -24,7 +42,7 @@ function App() {
 
       {/* Main content */}
       <main className="px-4 py-8">
-        <PackBuilder />
+        {page === 'create' ? <PackBuilder /> : <LibraryBrowser />}
       </main>
 
       {/* Footer */}

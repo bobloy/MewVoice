@@ -1,4 +1,4 @@
-import { VoicePack, VoicePackMeta, VoiceAction, AudioClip } from '@/types/voicepack';
+import { VoicePack, VoicePackMeta, AudioClip } from '@/types/voicepack';
 
 const API_BASE = '/api';
 
@@ -51,7 +51,12 @@ export async function listVoicePacks(page = 1, limit = 20): Promise<{
   return response.json();
 }
 
-/** Download a voice pack zip */
+/** Download a built (unpublished) voice pack zip */
 export function getDownloadUrl(id: string): string {
   return `${API_BASE}/voicepacks/${id}/download`;
+}
+
+/** Download a published voice pack zip */
+export function getPublishedDownloadUrl(id: string): string {
+  return `${API_BASE}/voicepacks/${id}/download-published`;
 }

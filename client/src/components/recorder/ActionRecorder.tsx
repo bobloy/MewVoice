@@ -7,6 +7,7 @@ import {
   ACTION_RECOMMENDED_CLIPS,
 } from '@/types/voicepack';
 import { validateAudioClip, generateClipId, getAudioDuration } from '@/lib/audio';
+import { playWithRandomPitch } from '@/lib/pitchPreview';
 
 interface ActionRecorderProps {
   action: VoiceAction;
@@ -96,13 +97,20 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
           {clips.map((clip, idx) => (
             <div
               key={clip.id}
-              className={`flex items-center gap-3 p-2 rounded-lg ${
+              className={`flex items-center gap-2 p-2 rounded-lg ${
                 clip.isValid ? 'bg-mew-bg/50' : 'bg-red-900/20 border border-red-800/30'
               }`}
             >
               <span className="text-mew-muted text-xs w-6">#{idx + 1}</span>
               <audio src={clip.url} controls className="h-8 flex-1" />
               <span className="text-xs text-mew-muted">{clip.duration.toFixed(1)}s</span>
+              <button
+                onClick={() => playWithRandomPitch(clip.blob)}
+                className="text-mew-muted hover:text-mew-accent text-sm px-1.5 py-0.5 rounded hover:bg-mew-highlight/30 transition-colors"
+                title="Preview with random pitch (simulates in-game sound)"
+              >
+                🎲
+              </button>
               {!clip.isValid && (
                 <span className="text-xs text-red-400">{clip.validationErrors[0]}</span>
               )}
@@ -126,10 +134,10 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
                 onClick={startRecording}
                 className="flex-1 bg-mew-accent hover:bg-mew-accent/80 text-white py-2 px-4 rounded-lg font-medium transition-colors"
               >
-                🎤 Record
+                Record
               </button>
               <label className="flex-1 bg-mew-highlight hover:bg-mew-highlight/80 text-white py-2 px-4 rounded-lg font-medium text-center cursor-pointer transition-colors">
-                📁 Upload
+                Upload
                 <input
                   type="file"
                   accept="audio/*"
@@ -147,7 +155,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
               onClick={stopRecording}
               className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 px-4 rounded-lg font-medium animate-pulse transition-colors"
             >
-              ⏹ Stop Recording
+              Stop Recording
             </button>
           )}
 
@@ -158,13 +166,13 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
                 onClick={handleSaveRecording}
                 className="bg-green-600 hover:bg-green-500 text-white py-2 px-3 rounded-lg text-sm transition-colors"
               >
-                ✓ Keep
+                Keep
               </button>
               <button
                 onClick={clearRecording}
                 className="bg-gray-600 hover:bg-gray-500 text-white py-2 px-3 rounded-lg text-sm transition-colors"
               >
-                ✕ Redo
+                Redo
               </button>
             </div>
           )}
