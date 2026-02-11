@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { PackBuilder } from '@/components/pack-builder/PackBuilder';
 import { LibraryBrowser } from '@/components/library/LibraryBrowser';
+import { InstructionsPage } from '@/components/instructions/InstructionsPage';
 
-type Page = 'create' | 'browse';
+type Page = 'create' | 'browse' | 'instructions';
 
 function App() {
   const [page, setPage] = useState<Page>('create');
@@ -36,13 +37,23 @@ function App() {
             >
               Browse Packs
             </button>
+            <button
+              onClick={() => setPage('instructions')}
+              className={`font-medium text-sm transition-colors ${
+                page === 'instructions' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
+              }`}
+            >
+              Instructions
+            </button>
           </nav>
         </div>
       </header>
 
       {/* Main content */}
       <main className="px-4 py-8">
-        {page === 'create' ? <PackBuilder /> : <LibraryBrowser />}
+        {page === 'create' && <PackBuilder />}
+        {page === 'browse' && <LibraryBrowser />}
+        {page === 'instructions' && <InstructionsPage />}
       </main>
 
       {/* Footer */}
