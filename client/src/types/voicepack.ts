@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Voice Pack types matching the Mewgenics GON voice system.
  * 
  * Each voice pack has 9 action categories with multiple WAV variants each.

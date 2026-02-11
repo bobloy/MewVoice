@@ -1,4 +1,4 @@
-﻿import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 
 interface UseAudioRecorderReturn {
   isRecording: boolean;

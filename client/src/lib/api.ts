@@ -1,4 +1,4 @@
-﻿import { VoicePack, VoicePackMeta, VoiceAction, AudioClip } from '@/types/voicepack';
+import { VoicePack, VoicePackMeta, VoiceAction, AudioClip } from '@/types/voicepack';
 
 const API_BASE = '/api';
 

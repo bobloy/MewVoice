@@ -1,4 +1,4 @@
-﻿import { PackBuilder } from '@/components/pack-builder/PackBuilder';
+import { PackBuilder } from '@/components/pack-builder/PackBuilder';
 
 function App() {
   return (

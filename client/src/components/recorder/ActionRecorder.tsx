@@ -1,4 +1,4 @@
-﻿import { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import {
   VoiceAction,

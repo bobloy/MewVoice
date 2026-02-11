@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Audio utility functions for validation and conversion.
  * The backend handles WAV conversion (webm->wav, resampling, mono mixdown).
  * Client-side we just do basic validation.
