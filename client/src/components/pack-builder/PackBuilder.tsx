@@ -1,0 +1,190 @@
+﻿import { useState, useCallback } from 'react';
+import {
+  VoicePack,
+  VoiceAction,
+  VoiceGender,
+  AudioClip,
+  VOICE_ACTIONS,
+  ACTION_RECOMMENDED_CLIPS,
+} from '@/types/voicepack';
+import { ActionRecorder } from '@/components/recorder/ActionRecorder';
+import { uploadVoicePack } from '@/lib/api';
+
+function createEmptyClips(): Record<VoiceAction, AudioClip[]> {
+  return Object.fromEntries(VOICE_ACTIONS.map((a) => [a, []])) as Record<VoiceAction, AudioClip[]>;
+}
+
+export function PackBuilder() {
+  const [pack, setPack] = useState<VoicePack>({
+    name: '',
+    author: '',
+    gender: 'male',
+    description: '',
+    clips: createEmptyClips(),
+  });
+
+  const [buildStatus, setBuildStatus] = useState<'idle' | 'building' | 'done' | 'error'>('idle');
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const totalClips = Object.values(pack.clips).reduce((sum, arr) => sum + arr.length, 0);
+  const meetsMinimum = VOICE_ACTIONS.every(
+    (action) => pack.clips[action].length >= ACTION_RECOMMENDED_CLIPS[action].min
+  );
+
+  const handleAddClip = useCallback((clip: AudioClip) => {
+    setPack((prev) => ({
+      ...prev,
+      clips: {
+        ...prev.clips,
+        [clip.action]: [...prev.clips[clip.action], clip],
+      },
+    }));
+  }, []);
+
+  const handleRemoveClip = useCallback((action: VoiceAction, clipId: string) => {
+    setPack((prev) => ({
+      ...prev,
+      clips: {
+        ...prev.clips,
+        [action]: prev.clips[action].filter((c) => c.id !== clipId),
+      },
+    }));
+  }, []);
+
+  const handleBuild = async () => {
+    if (!pack.name.trim()) {
+      setErrorMsg('Give your voice pack a name!');
+      return;
+    }
+    if (!meetsMinimum) {
+      setErrorMsg('Some actions still need more clips. Check the counts above.');
+      return;
+    }
+
+    setBuildStatus('building');
+    setErrorMsg('');
+
+    try {
+      const result = await uploadVoicePack(pack);
+      setDownloadUrl(result.downloadUrl);
+      setBuildStatus('done');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Build failed');
+      setBuildStatus('error');
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Pack metadata */}
+      <div className="bg-mew-surface rounded-xl p-6 mb-6 border border-mew-highlight/30">
+        <h2 className="text-2xl font-bold mb-4">Voice Pack Info</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-mew-muted mb-1">Pack Name *</label>
+            <input
+              type="text"
+              value={pack.name}
+              onChange={(e) => setPack((p) => ({ ...p, name: e.target.value }))}
+              placeholder="e.g. Silly Derp Cat"
+              className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-mew-muted mb-1">Author</label>
+            <input
+              type="text"
+              value={pack.author}
+              onChange={(e) => setPack((p) => ({ ...p, author: e.target.value }))}
+              placeholder="Your name"
+              className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-mew-muted mb-1">Voice Gender</label>
+            <select
+              value={pack.gender}
+              onChange={(e) => setPack((p) => ({ ...p, gender: e.target.value as VoiceGender }))}
+              className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text focus:outline-none focus:border-mew-accent"
+            >
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="neutral">Neutral</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-mew-muted mb-1">Description</label>
+            <input
+              type="text"
+              value={pack.description}
+              onChange={(e) => setPack((p) => ({ ...p, description: e.target.value }))}
+              placeholder="A goofy cat voice with lots of derp energy"
+              className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="bg-mew-surface rounded-xl p-4 mb-6 border border-mew-highlight/30">
+        <div className="flex justify-between text-sm mb-2">
+          <span className="text-mew-muted">Progress</span>
+          <span className="text-mew-text font-medium">{totalClips} clips recorded</span>
+        </div>
+        <div className="w-full bg-mew-bg rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all ${meetsMinimum ? 'bg-green-500' : 'bg-mew-accent'}`}
+            style={{
+              width: `${Math.min(100, (totalClips / (VOICE_ACTIONS.length * 4)) * 100)}%`,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Action recorders */}
+      <div className="space-y-4 mb-8">
+        {VOICE_ACTIONS.map((action) => (
+          <ActionRecorder
+            key={action}
+            action={action}
+            clips={pack.clips[action]}
+            onAddClip={handleAddClip}
+            onRemoveClip={(clipId) => handleRemoveClip(action, clipId)}
+          />
+        ))}
+      </div>
+
+      {/* Build button */}
+      <div className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
+        {buildStatus === 'done' && downloadUrl ? (
+          <div className="text-center">
+            <p className="text-green-400 text-lg mb-4">✓ Voice pack built successfully!</p>
+            <a
+              href={downloadUrl}
+              className="inline-block bg-green-600 hover:bg-green-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+            >
+              ⬇ Download Voice Pack
+            </a>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={handleBuild}
+              disabled={buildStatus === 'building' || !pack.name.trim()}
+              className="w-full bg-mew-accent hover:bg-mew-accent/80 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+            >
+              {buildStatus === 'building' ? '⏳ Building voice pack...' : '🐱 Build Voice Pack'}
+            </button>
+            {!meetsMinimum && (
+              <p className="text-yellow-400 text-sm mt-2 text-center">
+                Some actions need more clips. You can still build, but the pack may feel sparse.
+              </p>
+            )}
+            {errorMsg && <p className="text-red-400 text-sm mt-2 text-center">{errorMsg}</p>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
