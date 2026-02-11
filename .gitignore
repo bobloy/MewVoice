@@ -1,0 +1,14 @@
+client/node_modules/
+server/__pycache__/
+server/*.pyc
+client/dist/
+server/data/
+.env
+.env.local
+server/venv/
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+_*.txt
