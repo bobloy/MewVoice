@@ -89,8 +89,8 @@ export interface AudioClip {
   validationErrors: string[];
 }
 
-/** Gender flag for the voice pack (affects catgen.gon registration) */
-export type VoiceGender = 'male' | 'female' | 'neutral';
+/** Gender flag for the voice pack (affects distinctly_female in .gon Meta) */
+export type VoiceGender = 'male' | 'female';
 
 /** Complete voice pack state */
 export interface VoicePack {

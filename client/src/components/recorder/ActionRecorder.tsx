@@ -141,14 +141,19 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
 
       {/* Record / Upload controls */}
       <div className="flex flex-col gap-3">
-        {!isRecording && (
-          <div className="flex gap-3">
-            <button
-              onClick={startRecording}
-              className="flex-1 bg-mew-accent hover:bg-mew-accent/80 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-            >
-              Record
-            </button>
+        {/* Record + Stop share the same position; Upload hides while recording */}
+        <div className="flex gap-3">
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors text-white ${
+              isRecording
+                ? 'bg-red-600 hover:bg-red-500'
+                : 'bg-mew-accent hover:bg-mew-accent/80'
+            }`}
+          >
+            {isRecording ? 'Stop' : 'Record'}
+          </button>
+          {!isRecording && (
             <label className="flex-1 bg-mew-highlight hover:bg-mew-highlight/80 text-white py-2 px-4 rounded-lg font-medium text-center cursor-pointer transition-colors">
               Upload
               <input
@@ -160,42 +165,33 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
                 disabled={isUploading}
               />
             </label>
-          </div>
-        )}
+          )}
+        </div>
 
+        {/* Waveform + timer (visible while recording) */}
         {isRecording && (
-          <div className="space-y-3">
-            {/* Waveform + timer */}
-            <div className="bg-mew-bg/60 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-sm font-medium text-red-400">Recording</span>
-                </div>
-                <span className="text-sm font-mono text-mew-text">
-                  {elapsed.toFixed(1)}s
-                  <span className="text-mew-muted"> / {maxDur}s</span>
-                </span>
+          <div className="bg-mew-bg/60 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-sm font-medium text-red-400">Recording</span>
               </div>
-
-              {/* Time progress bar */}
-              <div className="w-full bg-mew-highlight/40 rounded-full h-1.5 mb-3">
-                <div
-                  className="h-1.5 rounded-full bg-red-500 transition-all duration-100"
-                  style={{ width: `${Math.min(100, (elapsed / maxDur) * 100)}%` }}
-                />
-              </div>
-
-              {/* Live waveform visualizer */}
-              {stream && <LiveWaveform stream={stream} />}
+              <span className="text-sm font-mono text-mew-text">
+                {elapsed.toFixed(1)}s
+                <span className="text-mew-muted"> / {maxDur}s</span>
+              </span>
             </div>
 
-            <button
-              onClick={stopRecording}
-              className="w-full bg-red-600 hover:bg-red-500 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-            >
-              Stop Recording
-            </button>
+            {/* Time progress bar */}
+            <div className="w-full bg-mew-highlight/40 rounded-full h-1.5 mb-3">
+              <div
+                className="h-1.5 rounded-full bg-red-500 transition-all duration-100"
+                style={{ width: `${Math.min(100, (elapsed / maxDur) * 100)}%` }}
+              />
+            </div>
+
+            {/* Live waveform visualizer */}
+            {stream && <LiveWaveform stream={stream} />}
           </div>
         )}
       </div>

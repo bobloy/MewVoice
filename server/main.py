@@ -45,10 +45,11 @@ async def build_voicepack(
         if a not in valid_actions:
             raise HTTPException(400, f"Invalid action: {a}")
 
-    build_id = str(uuid.uuid4())[:12]
+    build_id = str(uuid.uuid4())[:8]
     safe_name = "".join(c for c in name.lower().replace(" ","_") if c.isalnum() or c=="_")
-    if not safe_name: safe_name = f"custom_{build_id}"
-    pack_name = f"custom_{safe_name}"
+    safe_name = safe_name.strip("_")[:40]  # cap length, trim trailing underscores
+    if not safe_name: safe_name = "custom"
+    pack_name = f"custom_{safe_name}_{build_id}"
     build_dir = BUILDS_DIR / build_id
     voice_dir = build_dir / "audio" / "voices" / pack_name
     voice_dir.mkdir(parents=True, exist_ok=True)

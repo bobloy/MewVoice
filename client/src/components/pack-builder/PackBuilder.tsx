@@ -134,7 +134,6 @@ export function PackBuilder() {
             >
               <option value="male">Male</option>
               <option value="female">Female</option>
-              <option value="neutral">Neutral</option>
             </select>
           </div>
           <div>

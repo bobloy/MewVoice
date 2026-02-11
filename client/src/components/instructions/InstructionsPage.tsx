@@ -9,16 +9,18 @@ import {
 export function InstructionsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Overview */}
+      {/* What is this */}
       <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
         <h2 className="text-2xl font-bold mb-3">What is this?</h2>
         <p className="text-mew-muted leading-relaxed">
-          Mewgenics Voice Pack Creator lets you record custom cat voices for{' '}
-          <span className="text-mew-text font-medium">Mewgenics</span>. Every cat in
-          the game uses a voice pack — a set of short audio clips that play when
-          the cat meows, gets hit, purrs, and so on. This tool records your clips,
-          converts them to the right format, and packages everything into a
-          ready-to-install voice pack.
+          Mewgenics Voice Pack Creator lets you make custom cat voices for{' '}
+          <span className="text-mew-text font-medium">Mewgenics</span>.
+        </p>
+        <p className="text-mew-muted leading-relaxed mt-3">
+          Each cat uses a voice pack — short clips for meowing, getting hit,
+          purring, and more. This app records or accepts your audio, converts it
+          to the correct format, and packages it into a ready-to-install voice
+          pack.
         </p>
       </section>
 
@@ -27,44 +29,42 @@ export function InstructionsPage() {
         <h2 className="text-2xl font-bold mb-4">How it works</h2>
         <ol className="space-y-3 text-mew-muted list-decimal list-inside">
           <li>
-            <span className="text-mew-text font-medium">Name your pack</span> — give
-            it a name, choose a gender, and optionally add a description.
+            <span className="text-mew-text font-medium">Name your pack</span> —
+            choose a name and gender. Add a description if you want.
           </li>
           <li>
-            <span className="text-mew-text font-medium">Record or upload clips</span>{' '}
-            — for each voice action, hit the mic button and make your sound.
-            Recordings save automatically when you stop. You can also upload
-            pre-recorded audio files.
+            <span className="text-mew-text font-medium">Add clips</span> —
+            record with the mic or upload audio files. Clips save automatically.
           </li>
           <li>
-            <span className="text-mew-text font-medium">Preview with pitch shift</span>{' '}
-            — click the dice button on any clip to hear it with random pitch
-            variation, simulating how it sounds in-game.
+            <span className="text-mew-text font-medium">Preview</span> — use the
+            dice button to hear random pitch variation, similar to in-game
+            playback.
           </li>
           <li>
             <span className="text-mew-text font-medium">Build</span> — once all
-            required actions have at least one clip, hit Build. The server converts
-            your audio to mono 16-bit 44100 Hz WAV, trims silence, normalizes
-            volume, and generates the GON config file.
+            required actions have at least one clip, click Build. Audio is
+            converted, trimmed, normalized, and packaged.
           </li>
           <li>
-            <span className="text-mew-text font-medium">Download</span> — grab the
-            ZIP file containing your voice pack, ready to install.
+            <span className="text-mew-text font-medium">Download</span> — you’ll
+            get a ZIP file containing your voice pack.
           </li>
           <li>
-            <span className="text-mew-text font-medium">Publish (optional)</span> —
-            share your pack to the community library so others can download it.
+            <span className="text-mew-text font-medium">
+              Publish (optional)
+            </span>{' '}
+            — share it in the community library.
           </li>
         </ol>
       </section>
 
-      {/* Voice actions & data */}
+      {/* Voice actions */}
       <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
         <h2 className="text-2xl font-bold mb-2">Voice actions</h2>
         <p className="text-mew-muted text-sm mb-4">
-          Based on analysis of all 186 built-in voice packs in the game files.
-          The 6 core actions are required to build; the 3 optional actions can be
-          skipped.
+          Based on all 186 built-in voice packs in the game files. Six actions
+          are required. Three are optional.
         </p>
 
         <div className="overflow-x-auto">
@@ -118,10 +118,10 @@ export function InstructionsPage() {
       <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
         <h2 className="text-2xl font-bold mb-3">Audio format</h2>
         <p className="text-mew-muted text-sm mb-4">
-          You can record in any format your browser supports (usually WebM) or
-          upload WAV, MP3, OGG, etc. The server automatically converts everything
-          to the game's required format:
+          Record in any format your browser supports (usually WebM), or upload
+          WAV, MP3, OGG, etc.
         </p>
+
         <ul className="space-y-1 text-mew-muted text-sm">
           <li>
             <span className="text-mew-text">Format:</span> WAV (uncompressed)
@@ -141,34 +141,29 @@ export function InstructionsPage() {
             <span className="text-mew-text">Max clip length:</span>{' '}
             {AUDIO_REQUIREMENTS.maxDurationSec}s
           </li>
-          <li>
-            <span className="text-mew-text">Processing:</span> Silence trimmed,
-            volume normalized to -20 dBFS
-          </li>
+          <li>Silence trimmed</li>
+          <li>Normalized to -20 dBFS</li>
         </ul>
+
+        <p className="text-mew-muted text-xs mt-4">
+          No manual formatting needed.
+        </p>
       </section>
 
-      {/* Tips */}
+      {/* Recording tips */}
       <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
         <h2 className="text-2xl font-bold mb-3">Recording tips</h2>
         <ul className="space-y-2 text-mew-muted text-sm list-disc list-inside">
-          <li>Keep clips short — most in-game sounds are under 1.5 seconds.</li>
+          <li>Keep clips short. Most are under 1.5 seconds.</li>
           <li>
-            Record multiple variations of each action so the game can pick
-            randomly. 4 clips per action is a good target.
+            Record multiple variations. Four per action is a good baseline.
           </li>
           <li>
-            The game applies random pitch shifting to each clip on playback,
-            so don't worry about matching an exact pitch. Use the dice
-            button to preview how this sounds.
+            The game applies random pitch shifts on playback.
           </li>
+          <li>A quiet room helps.</li>
           <li>
-            Background noise is trimmed automatically, but a quiet room still
-            helps.
-          </li>
-          <li>
-            Gender affects which cats can use your voice — "male" or "female"
-            restricts the pack, "neutral" allows any cat.
+            Gender limits which cats can use the pack. “Neutral” allows any cat.
           </li>
         </ul>
       </section>
@@ -176,34 +171,70 @@ export function InstructionsPage() {
       {/* Installation */}
       <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
         <h2 className="text-2xl font-bold mb-3">Installing a voice pack</h2>
+
         <p className="text-mew-muted text-sm mb-4">
-          Voice packs need to be added to the game's resource archive. This is a
-          manual process for now — a one-click installer is planned.
+          Each downloaded ZIP includes an install script that handles everything
+          automatically. You need{' '}
+          <a
+            href="https://www.python.org/downloads/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-mew-accent hover:underline"
+          >
+            Python 3
+          </a>{' '}
+          installed.
         </p>
 
+        <h3 className="text-lg font-bold mt-4 mb-2">Automatic install</h3>
+        <p className="text-mew-muted text-sm mb-2">
+          Unzip the download and run the included script:
+        </p>
+        <code className="block bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
+          python install_voicepack.py voicepack.zip
+        </code>
+        <p className="text-mew-muted text-xs mt-2">
+          The script auto-detects your Mewgenics install, backs up
+          resources.gpak, injects the voice files, and registers the pack. You
+          can also pass the gpak path explicitly:
+        </p>
+        <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
+          python install_voicepack.py voicepack.zip
+          "C:/path/to/resources.gpak"
+        </code>
+
+        <h3 className="text-lg font-bold mt-6 mb-2">Manual install</h3>
+        <p className="text-mew-muted text-sm mb-3">
+          If you prefer to do it by hand:
+        </p>
         <ol className="space-y-3 text-mew-muted text-sm list-decimal list-inside">
           <li>
             <span className="text-mew-text font-medium">
-              Back up your resources.gpak
+              Back up resources.gpak
             </span>{' '}
-            — find it in your Mewgenics install folder. Copy it somewhere safe
-            before making changes.
+            — find it in your Mewgenics install folder and copy it somewhere
+            safe.
           </li>
           <li>
             <span className="text-mew-text font-medium">
-              Extract the game resources
+              Extract the game archive
             </span>{' '}
-            — use the GPAK tool to unpack the archive:
-            <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
-              python gpak_tool.py extract "path/to/resources.gpak" unpacked/
-            </code>
+            — use the{' '}
+            <a
+              href="https://github.com/ShootMe/GPAK-Extractor"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-mew-accent hover:underline"
+            >
+              GPAK-Extractor
+            </a>{' '}
+            tool. Drag resources.gpak onto the exe to unpack it.
           </li>
           <li>
             <span className="text-mew-text font-medium">
-              Copy the voice files
+              Copy your pack files
             </span>{' '}
-            — unzip your downloaded pack and copy its contents into the unpacked
-            folder. This adds:
+            — from the ZIP, copy the audio/ folder into the extracted output:
             <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono whitespace-pre-line">
               {'audio/voices/YourPackName.gon\naudio/voices/YourPackName/*.wav'}
             </code>
@@ -214,41 +245,37 @@ export function InstructionsPage() {
             </span>{' '}
             — open{' '}
             <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">
-              unpacked/data/catgen.gon
+              data/catgen.gon
             </code>{' '}
-            and find the <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">voice_sets {'{'}</code>{' '}
-            section. Add your pack:
+            and find the{' '}
+            <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">
+              voice_sets {'{'}
+            </code>{' '}
+            section. Add:
             <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
-              YourPackName 1 // Custom voice pack
+              YourPackName 1
             </code>
           </li>
           <li>
-            <span className="text-mew-text font-medium">Repack</span> — rebuild
-            the archive:
-            <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
-              python gpak_tool.py pack unpacked/ resources.gpak
-            </code>
+            <span className="text-mew-text font-medium">Repack</span> — drag
+            the output folder back onto the GPAK-Extractor exe to create a new
+            gpak.
           </li>
           <li>
             <span className="text-mew-text font-medium">
               Replace the original
             </span>{' '}
-            — move the new resources.gpak back into your game folder.
+            resources.gpak in your game folder with the repacked one.
           </li>
-          <li>
-            <span className="text-mew-text font-medium">Launch Mewgenics</span>{' '}
-            — your new voice should appear in the cat generation pool.
-          </li>
+          <li>Launch the game. Your voice pack will be available.</li>
         </ol>
 
         <div className="mt-4 bg-mew-bg rounded-lg p-4 border border-yellow-500/20">
-          <p className="text-yellow-400 text-sm font-medium mb-1">
-            Important
-          </p>
+          <p className="text-yellow-400 text-sm font-medium mb-1">Important</p>
           <p className="text-mew-muted text-xs">
-            Always keep a backup of your original resources.gpak. Game updates
-            may overwrite your modded archive, so you'll need to re-apply voice
-            packs after updating.
+            Keep a backup of your original resources.gpak. Game updates may
+            overwrite modified files. The install script creates backups
+            automatically.
           </p>
         </div>
       </section>

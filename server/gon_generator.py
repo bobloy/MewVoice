@@ -35,29 +35,39 @@ def generate_catgen_patch(pack_name, gender="male"):
 
 Voice Pack: {pack_name}
 
-INSTALLATION STEPS:
--------------------
+AUTOMATIC INSTALL:
+------------------
+Run the included script (requires Python 3):
+
+    python install_voicepack.py THIS_ZIP_FILE.zip
+
+It will auto-detect your game, back up resources.gpak, inject the
+voice files, and register the pack. Or pass the path explicitly:
+
+    python install_voicepack.py THIS_ZIP_FILE.zip "path/to/resources.gpak"
+
+
+MANUAL INSTALL:
+---------------
 
 1. BACKUP your original resources.gpak
 
-2. EXTRACT game resources (if not already done):
-   > python gpak_tool.py extract "path/to/resources.gpak" unpacked/
+2. EXTRACT game resources using the GPAK-Extractor:
+   https://github.com/ShootMe/GPAK-Extractor
+   Drag resources.gpak onto the exe to unpack.
 
-3. COPY the voice files from this ZIP into unpacked/
-   This adds: audio/voices/{pack_name}.gon
-              audio/voices/{pack_name}/*.wav
+3. COPY the voice files from this ZIP into the extracted output:
+   audio/voices/{pack_name}.gon
+   audio/voices/{pack_name}/*.wav
 
 4. REGISTER in catgen.gon:
-   Open: unpacked/data/catgen.gon
+   Open: data/catgen.gon
    Find "voice_sets {{"
-   Add:  {pack_name} 1 // Custom voice pack
+   Add:  {pack_name} 1
 
-5. REPACK: python gpak_tool.py pack unpacked/ resources.gpak
+5. REPACK: drag the output folder onto GPAK-Extractor
 
 6. REPLACE original resources.gpak
 
 7. Launch Mewgenics!
-
-GON ENTRY TO ADD:
-    {pack_name} 1 // Custom voice pack
 """
