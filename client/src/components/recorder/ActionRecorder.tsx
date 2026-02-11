@@ -1,13 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import {
   VoiceAction,
   AudioClip,
   ACTION_DESCRIPTIONS,
   ACTION_RECOMMENDED_CLIPS,
+  AUDIO_REQUIREMENTS,
 } from '@/types/voicepack';
 import { validateAudioClip, generateClipId, getAudioDuration } from '@/lib/audio';
 import { playWithRandomPitch } from '@/lib/pitchPreview';
+import { LiveWaveform } from '@/components/recorder/LiveWaveform';
 
 interface ActionRecorderProps {
   action: VoiceAction;
@@ -17,24 +19,34 @@ interface ActionRecorderProps {
 }
 
 export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: ActionRecorderProps) {
-  const { isRecording, audioBlob, audioUrl, duration, startRecording, stopRecording, clearRecording, error } =
-    useAudioRecorder();
+  const {
+    isRecording,
+    stream,
+    audioBlob,
+    duration,
+    elapsed,
+    startRecording,
+    stopRecording,
+    clearRecording,
+    error,
+  } = useAudioRecorder();
   const [isUploading, setIsUploading] = useState(false);
-  const recommended = ACTION_RECOMMENDED_CLIPS[action];
-  const isFull = clips.length >= recommended.max;
+  const info = ACTION_RECOMMENDED_CLIPS[action];
+  const meetsRecommended = clips.length >= info.recommended;
 
-  const handleSaveRecording = useCallback(async () => {
-    if (!audioBlob || !audioUrl) return;
+  // Auto-keep: when a recording finishes, save it immediately
+  useEffect(() => {
+    if (!audioBlob || isRecording) return;
 
-    const actualDuration = await getAudioDuration(audioBlob).catch(() => duration);
-    const validation = validateAudioClip(audioBlob, actualDuration);
+    const clipUrl = URL.createObjectURL(audioBlob);
+    const validation = validateAudioClip(audioBlob, duration);
 
     const clip: AudioClip = {
       id: generateClipId(),
       action,
       blob: audioBlob,
-      url: audioUrl,
-      duration: actualDuration,
+      url: clipUrl,
+      duration,
       fileName: `${action.toLowerCase()}${clips.length + 1}.webm`,
       isValid: validation.valid,
       validationErrors: validation.errors,
@@ -42,7 +54,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
 
     onAddClip(clip);
     clearRecording();
-  }, [audioBlob, audioUrl, duration, action, clips.length, onAddClip, clearRecording]);
+  }, [audioBlob, isRecording]);
 
   const handleFileUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +87,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
     [action, onAddClip]
   );
 
-  const meetsMinimum = clips.length >= recommended.min;
+  const maxDur = AUDIO_REQUIREMENTS.maxDurationSec;
 
   return (
     <div className="bg-mew-surface rounded-xl p-5 border border-mew-highlight/30">
@@ -83,13 +95,15 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
         <h3 className="text-lg font-bold text-mew-accent">{action}</h3>
         <span
           className={`text-sm px-2 py-0.5 rounded-full ${
-            meetsMinimum ? 'bg-green-900/40 text-green-400' : 'bg-yellow-900/40 text-yellow-400'
+            meetsRecommended ? 'bg-green-900/40 text-green-400' : 'bg-yellow-900/40 text-yellow-400'
           }`}
         >
-          {clips.length}/{recommended.min}–{recommended.max}
+          {clips.length} / {info.recommended} rec
         </span>
       </div>
-      <p className="text-mew-muted text-sm mb-4">{ACTION_DESCRIPTIONS[action]}</p>
+      <p className="text-mew-muted text-sm mb-4">
+        {ACTION_DESCRIPTIONS[action]}
+      </p>
 
       {/* Existing clips */}
       {clips.length > 0 && (
@@ -126,62 +140,65 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
       )}
 
       {/* Record / Upload controls */}
-      {!isFull && (
-        <div className="flex gap-3">
-          {!isRecording && !audioBlob && (
-            <>
-              <button
-                onClick={startRecording}
-                className="flex-1 bg-mew-accent hover:bg-mew-accent/80 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-              >
-                Record
-              </button>
-              <label className="flex-1 bg-mew-highlight hover:bg-mew-highlight/80 text-white py-2 px-4 rounded-lg font-medium text-center cursor-pointer transition-colors">
-                Upload
-                <input
-                  type="file"
-                  accept="audio/*"
-                  multiple
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={isUploading}
-                />
-              </label>
-            </>
-          )}
+      <div className="flex flex-col gap-3">
+        {!isRecording && (
+          <div className="flex gap-3">
+            <button
+              onClick={startRecording}
+              className="flex-1 bg-mew-accent hover:bg-mew-accent/80 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+            >
+              Record
+            </button>
+            <label className="flex-1 bg-mew-highlight hover:bg-mew-highlight/80 text-white py-2 px-4 rounded-lg font-medium text-center cursor-pointer transition-colors">
+              Upload
+              <input
+                type="file"
+                accept="audio/*"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={isUploading}
+              />
+            </label>
+          </div>
+        )}
 
-          {isRecording && (
+        {isRecording && (
+          <div className="space-y-3">
+            {/* Waveform + timer */}
+            <div className="bg-mew-bg/60 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-sm font-medium text-red-400">Recording</span>
+                </div>
+                <span className="text-sm font-mono text-mew-text">
+                  {elapsed.toFixed(1)}s
+                  <span className="text-mew-muted"> / {maxDur}s</span>
+                </span>
+              </div>
+
+              {/* Time progress bar */}
+              <div className="w-full bg-mew-highlight/40 rounded-full h-1.5 mb-3">
+                <div
+                  className="h-1.5 rounded-full bg-red-500 transition-all duration-100"
+                  style={{ width: `${Math.min(100, (elapsed / maxDur) * 100)}%` }}
+                />
+              </div>
+
+              {/* Live waveform visualizer */}
+              {stream && <LiveWaveform stream={stream} />}
+            </div>
+
             <button
               onClick={stopRecording}
-              className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 px-4 rounded-lg font-medium animate-pulse transition-colors"
+              className="w-full bg-red-600 hover:bg-red-500 text-white py-2 px-4 rounded-lg font-medium transition-colors"
             >
               Stop Recording
             </button>
-          )}
-
-          {audioBlob && !isRecording && (
-            <div className="flex gap-2 flex-1">
-              <audio src={audioUrl!} controls className="h-10 flex-1" />
-              <button
-                onClick={handleSaveRecording}
-                className="bg-green-600 hover:bg-green-500 text-white py-2 px-3 rounded-lg text-sm transition-colors"
-              >
-                Keep
-              </button>
-              <button
-                onClick={clearRecording}
-                className="bg-gray-600 hover:bg-gray-500 text-white py-2 px-3 rounded-lg text-sm transition-colors"
-              >
-                Redo
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {isFull && (
-        <p className="text-mew-muted text-sm italic">Maximum clips reached for this action.</p>
-      )}
+          </div>
+        )}
+      </div>
 
       {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
     </div>

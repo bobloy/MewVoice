@@ -9,12 +9,57 @@ import { AUDIO_REQUIREMENTS } from '@/types/voicepack';
 export async function getAudioDuration(blob: Blob): Promise<number> {
   return new Promise((resolve, reject) => {
     const audio = new Audio();
-    audio.onloadedmetadata = () => {
-      resolve(audio.duration);
-      URL.revokeObjectURL(audio.src);
+    const url = URL.createObjectURL(blob);
+    let resolved = false;
+
+    const done = (dur: number) => {
+      if (resolved) return;
+      resolved = true;
+      URL.revokeObjectURL(url);
+      resolve(dur);
     };
-    audio.onerror = () => reject(new Error('Failed to read audio metadata'));
-    audio.src = URL.createObjectURL(blob);
+
+    const fail = () => {
+      if (resolved) return;
+      resolved = true;
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to read audio metadata'));
+    };
+
+    // If we get a finite duration at any point, use it
+    const check = () => {
+      if (audio.duration && isFinite(audio.duration)) {
+        done(audio.duration);
+      }
+    };
+
+    audio.addEventListener('loadedmetadata', () => {
+      if (isFinite(audio.duration)) {
+        done(audio.duration);
+      } else {
+        // WebM blobs often report Infinity here.
+        // Seek to a huge time to force the browser to figure out the real duration.
+        audio.currentTime = 1e10;
+      }
+    });
+
+    audio.addEventListener('durationchange', check);
+    audio.addEventListener('timeupdate', check);
+    audio.addEventListener('seeked', check);
+    audio.addEventListener('error', fail);
+
+    // Safety timeout — if the browser can't resolve the duration in 2s,
+    // give up and let the caller use its fallback (recorder elapsed time).
+    setTimeout(() => {
+      if (!resolved) {
+        URL.revokeObjectURL(url);
+        resolved = true;
+        reject(new Error('Duration detection timed out'));
+      }
+    }, 2000);
+
+    audio.preload = 'metadata';
+    audio.src = url;
   });
 }
 
@@ -23,6 +68,11 @@ export function validateAudioClip(
   duration: number
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
+
+  if (!isFinite(duration) || duration <= 0) {
+    // Duration unknown — skip duration checks, server will validate
+    return { valid: true, errors: [] };
+  }
 
   if (duration > AUDIO_REQUIREMENTS.maxDurationSec) {
     errors.push(

@@ -5,6 +5,7 @@ import {
   VoiceGender,
   AudioClip,
   VOICE_ACTIONS,
+  CORE_ACTIONS,
   ACTION_RECOMMENDED_CLIPS,
 } from '@/types/voicepack';
 import { ActionRecorder } from '@/components/recorder/ActionRecorder';
@@ -32,8 +33,10 @@ export function PackBuilder() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const totalClips = Object.values(pack.clips).reduce((sum, arr) => sum + arr.length, 0);
-  const meetsMinimum = VOICE_ACTIONS.every(
-    (action) => pack.clips[action].length >= ACTION_RECOMMENDED_CLIPS[action].min
+  const missingCore = CORE_ACTIONS.filter((a) => pack.clips[a].length === 0);
+  const canBuild = pack.name.trim() !== '' && missingCore.length === 0;
+  const meetsRecommended = VOICE_ACTIONS.every(
+    (action) => pack.clips[action].length >= ACTION_RECOMMENDED_CLIPS[action].recommended
   );
 
   const handleAddClip = useCallback((clip: AudioClip) => {
@@ -57,14 +60,7 @@ export function PackBuilder() {
   }, []);
 
   const handleBuild = async () => {
-    if (!pack.name.trim()) {
-      setErrorMsg('Give your voice pack a name!');
-      return;
-    }
-    if (totalClips === 0) {
-      setErrorMsg('Record at least one clip before building!');
-      return;
-    }
+    if (!canBuild) return;
 
     setBuildStatus('building');
     setErrorMsg('');
@@ -163,7 +159,7 @@ export function PackBuilder() {
         </div>
         <div className="w-full bg-mew-bg rounded-full h-2">
           <div
-            className={`h-2 rounded-full transition-all ${meetsMinimum ? 'bg-green-500' : 'bg-mew-accent'}`}
+            className={`h-2 rounded-full transition-all ${meetsRecommended ? 'bg-green-500' : 'bg-mew-accent'}`}
             style={{
               width: `${Math.min(100, (totalClips / (VOICE_ACTIONS.length * 4)) * 100)}%`,
             }}
@@ -230,14 +226,19 @@ export function PackBuilder() {
           <>
             <button
               onClick={handleBuild}
-              disabled={buildStatus === 'building' || !pack.name.trim()}
+              disabled={buildStatus === 'building' || !canBuild}
               className="w-full bg-mew-accent hover:bg-mew-accent/80 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
             >
               {buildStatus === 'building' ? 'Building voice pack...' : 'Build Voice Pack'}
             </button>
-            {!meetsMinimum && totalClips > 0 && (
+            {!canBuild && totalClips > 0 && pack.name.trim() && (
+              <p className="text-mew-muted text-sm mt-2 text-center">
+                Still need clips for: {missingCore.join(', ')}
+              </p>
+            )}
+            {canBuild && !meetsRecommended && (
               <p className="text-yellow-400 text-sm mt-2 text-center">
-                Some actions need more clips. You can still build, but the pack may feel sparse.
+                Ready to build! Some actions are below the recommended count.
               </p>
             )}
             {errorMsg && <p className="text-red-400 text-sm mt-2 text-center">{errorMsg}</p>}
