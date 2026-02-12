@@ -101,6 +101,13 @@ export interface VoicePack {
   clips: Record<VoiceAction, AudioClip[]>;
 }
 
+/** Steam user info from JWT session */
+export interface SteamUser {
+  steamId: string;
+  personaName: string;
+  avatarUrl: string;
+}
+
 /** Pack metadata for the community library */
 export interface VoicePackMeta {
   id: string;
@@ -111,4 +118,8 @@ export interface VoicePackMeta {
   clipCounts: Record<VoiceAction, number>;
   createdAt: string;
   downloads: number;
+  // Ownership (present on packs published by a logged-in user)
+  steamId?: string;
+  steamName?: string;
+  steamAvatar?: string;
 }

@@ -5,12 +5,13 @@ export default {
     extend: {
       colors: {
         mew: {
-          bg: '#1a1a2e',
-          surface: '#16213e',
-          accent: '#e94560',
-          highlight: '#0f3460',
-          text: '#eee',
-          muted: '#888',
+          bg: 'var(--color-charcoal)',
+          surface: 'var(--color-mushroom)',
+          accent: 'var(--color-ember)',
+          highlight: 'var(--color-olive)',
+          text: 'var(--color-cream)',
+          muted: 'var(--color-parchment)',
+          sage: 'var(--color-sage)',
         },
       },
     },

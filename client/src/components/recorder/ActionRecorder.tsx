@@ -5,6 +5,7 @@ import {
   AudioClip,
   ACTION_DESCRIPTIONS,
   ACTION_RECOMMENDED_CLIPS,
+  CORE_ACTIONS,
   AUDIO_REQUIREMENTS,
 } from '@/types/voicepack';
 import { validateAudioClip, generateClipId, getAudioDuration } from '@/lib/audio';
@@ -32,7 +33,16 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
   } = useAudioRecorder();
   const [isUploading, setIsUploading] = useState(false);
   const info = ACTION_RECOMMENDED_CLIPS[action];
+  const isCore = CORE_ACTIONS.includes(action);
   const meetsRecommended = clips.length >= info.recommended;
+  const meetsMinimum = clips.length >= info.gameMin;
+
+  // Green: recommended reached, Amber: below recommended, Red: below minimum on required
+  const badgeClass = meetsRecommended
+    ? 'bg-green-900/40 text-green-400'
+    : !meetsMinimum && isCore
+      ? 'bg-red-900/40 text-red-400'
+      : 'bg-amber-900/40 text-amber-400';
 
   // Auto-keep: when a recording finishes, save it immediately
   useEffect(() => {
@@ -93,11 +103,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
     <div className="bg-mew-surface rounded-xl p-5 border border-mew-highlight/30">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-bold text-mew-accent">{action}</h3>
-        <span
-          className={`text-sm px-2 py-0.5 rounded-full ${
-            meetsRecommended ? 'bg-green-900/40 text-green-400' : 'bg-yellow-900/40 text-yellow-400'
-          }`}
-        >
+        <span className={`text-sm px-2 py-0.5 rounded-full ${badgeClass}`}>
           {clips.length} / {info.recommended} rec
         </span>
       </div>
@@ -145,16 +151,16 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
         <div className="flex gap-3">
           <button
             onClick={isRecording ? stopRecording : startRecording}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors text-white ${
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
               isRecording
-                ? 'bg-red-600 hover:bg-red-500'
-                : 'bg-mew-accent hover:bg-mew-accent/80'
+                ? 'bg-mew-highlight hover:bg-mew-highlight/80 text-mew-text'
+                : 'bg-mew-accent hover:bg-mew-accent/80 text-mew-text'
             }`}
           >
             {isRecording ? 'Stop' : 'Record'}
           </button>
           {!isRecording && (
-            <label className="flex-1 bg-mew-highlight hover:bg-mew-highlight/80 text-white py-2 px-4 rounded-lg font-medium text-center cursor-pointer transition-colors">
+            <label className="flex-1 bg-mew-highlight hover:bg-mew-highlight/80 text-mew-text py-2 px-4 rounded-lg font-medium text-center cursor-pointer transition-colors">
               Upload
               <input
                 type="file"
@@ -173,8 +179,8 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
           <div className="bg-mew-bg/60 rounded-lg p-3">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-sm font-medium text-red-400">Recording</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-mew-accent animate-pulse" />
+                <span className="text-sm font-medium text-mew-accent">Recording</span>
               </div>
               <span className="text-sm font-mono text-mew-text">
                 {elapsed.toFixed(1)}s
@@ -185,7 +191,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
             {/* Time progress bar */}
             <div className="w-full bg-mew-highlight/40 rounded-full h-1.5 mb-3">
               <div
-                className="h-1.5 rounded-full bg-red-500 transition-all duration-100"
+                className="h-1.5 rounded-full bg-mew-accent transition-all duration-100"
                 style={{ width: `${Math.min(100, (elapsed / maxDur) * 100)}%` }}
               />
             </div>

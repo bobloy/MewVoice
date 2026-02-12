@@ -1,18 +1,23 @@
 """
-Mewgenics Voice Pack Creator - API Server
+MewVoice - API Server
 """
-import os, uuid, shutil, json, zipfile
+import os, uuid, shutil, json, zipfile, urllib.parse
 from datetime import datetime
 from pathlib import Path
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from audio_converter import convert_to_game_wav
 from gon_generator import generate_voice_gon, generate_catgen_patch
 from pack_builder import build_voice_pack_zip
+from auth import (
+    build_steam_openid_params, verify_steam_openid, fetch_steam_profile,
+    create_jwt_token, get_current_user, require_user,
+    STEAM_OPENID_URL, SITE_ORIGIN, DEV_STEAM_ID, COOKIE_NAME, COOKIE_MAX_AGE,
+)
 
-app = FastAPI(title="Mewgenics Voice Pack Creator", version="0.1.0")
+app = FastAPI(title="MewVoice", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"],
     allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
@@ -29,6 +34,63 @@ def _load_library_meta():
 
 def _save_library_meta(meta):
     LIBRARY_META.write_text(json.dumps(meta, indent=2))
+
+
+# ── Auth endpoints ───────────────────────────────────────────────────────────
+
+@app.get("/api/auth/steam/login")
+async def steam_login(request: Request):
+    """Redirect to Steam's OpenID login page (or dev bypass)."""
+    if DEV_STEAM_ID:
+        profile = await fetch_steam_profile(DEV_STEAM_ID)
+        token = create_jwt_token(profile)
+        response = RedirectResponse(url=SITE_ORIGIN, status_code=302)
+        response.set_cookie(COOKIE_NAME, token, httponly=True, samesite="lax", max_age=COOKIE_MAX_AGE)
+        return response
+
+    return_to = f"{SITE_ORIGIN}/api/auth/steam/callback"
+    realm = f"{SITE_ORIGIN}/"
+    params = build_steam_openid_params(return_to, realm)
+    redirect_url = f"{STEAM_OPENID_URL}?{urllib.parse.urlencode(params)}"
+    return RedirectResponse(url=redirect_url, status_code=302)
+
+
+@app.get("/api/auth/steam/callback")
+async def steam_callback(request: Request):
+    """Handle Steam's OpenID callback, verify identity, create session."""
+    steam_id = await verify_steam_openid(dict(request.query_params))
+    if not steam_id:
+        return RedirectResponse(url=f"{SITE_ORIGIN}/?auth_error=1", status_code=302)
+
+    profile = await fetch_steam_profile(steam_id)
+    token = create_jwt_token(profile)
+    response = RedirectResponse(url=SITE_ORIGIN, status_code=302)
+    response.set_cookie(COOKIE_NAME, token, httponly=True, samesite="lax", max_age=COOKIE_MAX_AGE)
+    return response
+
+
+@app.get("/api/auth/me")
+async def auth_me(request: Request):
+    """Return the current logged-in user, or null."""
+    user = get_current_user(request)
+    if not user:
+        return {"user": None}
+    return {"user": {
+        "steamId": user["steam_id"],
+        "personaName": user["persona_name"],
+        "avatarUrl": user["avatar_url"],
+    }}
+
+
+@app.post("/api/auth/logout")
+async def auth_logout():
+    """Clear the session cookie."""
+    response = Response(content='{"ok": true}', media_type="application/json")
+    response.delete_cookie(COOKIE_NAME)
+    return response
+
+
+# ── Voicepack endpoints ──────────────────────────────────────────────────────
 
 @app.post("/api/voicepacks/build")
 async def build_voicepack(
@@ -95,7 +157,8 @@ async def download_voicepack(build_id: str):
         filename=f"mewgenics_voicepack_{build_id}.zip")
 
 @app.post("/api/voicepacks/{build_id}/publish")
-async def publish_voicepack(build_id: str):
+async def publish_voicepack(build_id: str, request: Request):
+    user = require_user(request)
     zip_path = BUILDS_DIR / f"{build_id}.zip"
     if not zip_path.exists(): raise HTTPException(404, "Build first.")
     lib_path = LIBRARY_DIR / f"{build_id}.zip"
@@ -104,10 +167,19 @@ async def publish_voicepack(build_id: str):
     with zipfile.ZipFile(str(zip_path), "r") as zf:
         if "metadata.json" in zf.namelist():
             meta = json.loads(zf.read("metadata.json"))
-    entry = {"id": build_id, "name": meta.get("name","Untitled"),
-        "author": meta.get("author","Anonymous"), "gender": meta.get("gender","male"),
-        "description": meta.get("description",""), "clipCounts": meta.get("clip_counts",{}),
-        "createdAt": meta.get("created_at", datetime.utcnow().isoformat()), "downloads": 0}
+    entry = {
+        "id": build_id,
+        "name": meta.get("name", "Untitled"),
+        "author": meta.get("author", "Anonymous"),
+        "gender": meta.get("gender", "male"),
+        "description": meta.get("description", ""),
+        "clipCounts": meta.get("clip_counts", {}),
+        "createdAt": meta.get("created_at", datetime.utcnow().isoformat()),
+        "downloads": 0,
+        "steamId": user["steam_id"],
+        "steamName": user["persona_name"],
+        "steamAvatar": user["avatar_url"],
+    }
     library = [e for e in _load_library_meta() if e["id"] != build_id]
     library.insert(0, entry)
     _save_library_meta(library)
@@ -129,6 +201,33 @@ async def download_published(pack_id: str):
     _save_library_meta(library)
     return FileResponse(str(zip_path), media_type="application/zip",
         filename=f"mewgenics_voicepack_{pack_id}.zip")
+
+@app.delete("/api/voicepacks/{pack_id}")
+async def delete_voicepack(pack_id: str, request: Request):
+    """Delete a published voice pack. Owner only."""
+    user = require_user(request)
+    library = _load_library_meta()
+    entry = next((e for e in library if e["id"] == pack_id), None)
+    if not entry:
+        raise HTTPException(404, "Voice pack not found")
+    if entry.get("steamId") != user["steam_id"]:
+        raise HTTPException(403, "You can only delete your own voice packs")
+
+    library = [e for e in library if e["id"] != pack_id]
+    _save_library_meta(library)
+
+    lib_zip = LIBRARY_DIR / f"{pack_id}.zip"
+    lib_zip.unlink(missing_ok=True)
+
+    return {"ok": True, "id": pack_id}
+
+@app.get("/api/install-script")
+async def download_install_script():
+    script_path = Path(__file__).parent / "install_voicepack.py"
+    if not script_path.exists():
+        raise HTTPException(404, "Install script not found")
+    return FileResponse(str(script_path), media_type="text/x-python",
+        filename="install_voicepack.py")
 
 @app.get("/api/health")
 async def health():

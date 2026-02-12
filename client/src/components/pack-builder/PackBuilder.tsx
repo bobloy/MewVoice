@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   VoicePack,
   VoiceAction,
@@ -10,6 +10,7 @@ import {
 } from '@/types/voicepack';
 import { ActionRecorder } from '@/components/recorder/ActionRecorder';
 import { uploadVoicePack, publishVoicePack } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 function createEmptyClips(): Record<VoiceAction, AudioClip[]> {
   const clips: Partial<Record<VoiceAction, AudioClip[]>> = {};
@@ -18,6 +19,8 @@ function createEmptyClips(): Record<VoiceAction, AudioClip[]> {
 }
 
 export function PackBuilder() {
+  const { user, login } = useAuth();
+
   const [pack, setPack] = useState<VoicePack>({
     name: '',
     author: '',
@@ -25,6 +28,13 @@ export function PackBuilder() {
     description: '',
     clips: createEmptyClips(),
   });
+
+  // Auto-fill author from Steam name when user logs in and author is empty
+  useEffect(() => {
+    if (user && !pack.author) {
+      setPack((p) => ({ ...p, author: user.personaName }));
+    }
+  }, [user]);
 
   const [buildStatus, setBuildStatus] = useState<'idle' | 'building' | 'done' | 'error'>('idle');
   const [buildId, setBuildId] = useState<string | null>(null);
@@ -82,13 +92,25 @@ export function PackBuilder() {
     try {
       await publishVoicePack(buildId);
       setPublishStatus('published');
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Publish failed';
+      if (msg.includes('Login required')) {
+        setErrorMsg('You need to sign in with Steam to publish.');
+      } else {
+        setErrorMsg(msg);
+      }
       setPublishStatus('error');
     }
   };
 
   const handleReset = () => {
-    setPack({ name: '', author: '', gender: 'male', description: '', clips: createEmptyClips() });
+    setPack({
+      name: '',
+      author: user?.personaName || '',
+      gender: 'male',
+      description: '',
+      clips: createEmptyClips(),
+    });
     setBuildStatus('idle');
     setBuildId(null);
     setDownloadUrl(null);
@@ -190,28 +212,37 @@ export function PackBuilder() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href={downloadUrl}
-                className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+                className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-mew-text py-3 px-8 rounded-lg font-bold text-lg transition-colors"
               >
                 Download ZIP
               </a>
 
               {publishStatus === 'published' ? (
-                <div className="inline-flex items-center justify-center gap-2 bg-mew-highlight text-green-400 py-3 px-8 rounded-lg font-bold text-lg">
+                <div className="inline-flex items-center justify-center gap-2 bg-green-900/30 text-green-400 py-3 px-8 rounded-lg font-bold text-lg">
                   Published!
                 </div>
-              ) : (
+              ) : user ? (
                 <button
                   onClick={handlePublish}
                   disabled={publishStatus === 'publishing'}
-                  className="inline-flex items-center justify-center gap-2 bg-mew-accent hover:bg-mew-accent/80 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+                  className="inline-flex items-center justify-center gap-2 bg-mew-accent hover:bg-mew-accent/80 disabled:bg-gray-700 disabled:text-gray-500 text-mew-text py-3 px-8 rounded-lg font-bold text-lg transition-colors"
                 >
                   {publishStatus === 'publishing' ? 'Publishing...' : 'Publish to Library'}
+                </button>
+              ) : (
+                <button onClick={login} className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
+                  <img
+                    src="https://community.fastly.steamstatic.com/public/images/signinthroughsteam/sits_01.png"
+                    alt="Sign in through Steam"
+                    height="35"
+                  />
+                  <span className="text-mew-muted text-sm">to publish</span>
                 </button>
               )}
             </div>
 
             {publishStatus === 'error' && (
-              <p className="text-red-400 text-sm">Failed to publish. Try again?</p>
+              <p className="text-red-400 text-sm">{errorMsg || 'Failed to publish. Try again?'}</p>
             )}
 
             <button
@@ -226,7 +257,7 @@ export function PackBuilder() {
             <button
               onClick={handleBuild}
               disabled={buildStatus === 'building' || !canBuild}
-              className="w-full bg-mew-accent hover:bg-mew-accent/80 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+              className="w-full bg-mew-accent hover:bg-mew-accent/80 disabled:bg-gray-700 disabled:text-gray-500 text-mew-text py-3 px-8 rounded-lg font-bold text-lg transition-colors"
             >
               {buildStatus === 'building' ? 'Building voice pack...' : 'Build Voice Pack'}
             </button>
@@ -236,7 +267,7 @@ export function PackBuilder() {
               </p>
             )}
             {canBuild && !meetsRecommended && (
-              <p className="text-yellow-400 text-sm mt-2 text-center">
+              <p className="text-amber-400 text-sm mt-2 text-center">
                 Ready to build! Some actions are below the recommended count.
               </p>
             )}

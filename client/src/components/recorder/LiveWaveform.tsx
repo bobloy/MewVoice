@@ -10,7 +10,7 @@ interface LiveWaveformProps {
  * Lightweight live audio waveform using Web Audio AnalyserNode.
  * Draws frequency bars on a canvas while a MediaStream is active.
  */
-export function LiveWaveform({ stream, barColor = '#e94560', height = 48 }: LiveWaveformProps) {
+export function LiveWaveform({ stream, barColor = '#C47A4A', height = 48 }: LiveWaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);

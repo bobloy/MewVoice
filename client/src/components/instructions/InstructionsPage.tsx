@@ -6,6 +6,23 @@ import {
   AUDIO_REQUIREMENTS,
 } from '@/types/voicepack';
 
+function downloadInstallScript() {
+  fetch('/api/install-script')
+    .then((res) => {
+      if (!res.ok) throw new Error('Download failed');
+      return res.blob();
+    })
+    .then((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'install_voicepack.py';
+      a.click();
+      URL.revokeObjectURL(url);
+    })
+    .catch(() => alert('Could not download install script. Is the server running?'));
+}
+
 export function InstructionsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -13,7 +30,7 @@ export function InstructionsPage() {
       <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
         <h2 className="text-2xl font-bold mb-3">What is this?</h2>
         <p className="text-mew-muted leading-relaxed">
-          Mewgenics Voice Pack Creator lets you make custom cat voices for{' '}
+          MewVoice lets you make custom cat voices for{' '}
           <span className="text-mew-text font-medium">Mewgenics</span>.
         </p>
         <p className="text-mew-muted leading-relaxed mt-3">
@@ -55,6 +72,11 @@ export function InstructionsPage() {
               Publish (optional)
             </span>{' '}
             — share it in the community library.
+          </li>
+          <li>
+            <span className="text-mew-text font-medium">Install</span> —
+            collect your downloaded ZIPs into a folder and run the install
+            script. See below.
           </li>
         </ol>
       </section>
@@ -163,18 +185,18 @@ export function InstructionsPage() {
           </li>
           <li>A quiet room helps.</li>
           <li>
-            Gender limits which cats can use the pack. “Neutral” allows any cat.
+            Gender limits which cats can use the pack. Male voices go to male cats, female to female.
           </li>
         </ul>
       </section>
 
       {/* Installation */}
       <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
-        <h2 className="text-2xl font-bold mb-3">Installing a voice pack</h2>
+        <h2 className="text-2xl font-bold mb-3">Installing voice packs</h2>
 
         <p className="text-mew-muted text-sm mb-4">
-          Each downloaded ZIP includes an install script that handles everything
-          automatically. You need{' '}
+          Download as many voice packs as you like, then install them all at
+          once with the standalone install script. You need{' '}
           <a
             href="https://www.python.org/downloads/"
             target="_blank"
@@ -186,22 +208,57 @@ export function InstructionsPage() {
           installed.
         </p>
 
+        <button
+          onClick={downloadInstallScript}
+          className="mb-4 px-4 py-2 bg-mew-accent hover:bg-mew-accent/80 text-mew-text rounded-lg font-medium text-sm transition-colors"
+        >
+          Download install_voicepack.py
+        </button>
+
         <h3 className="text-lg font-bold mt-4 mb-2">Automatic install</h3>
-        <p className="text-mew-muted text-sm mb-2">
-          Unzip the download and run the included script:
+        <ol className="space-y-3 text-mew-muted text-sm list-decimal list-inside mb-4">
+          <li>
+            <span className="text-mew-text font-medium">
+              Download the install script
+            </span>{' '}
+            — use the button above (one-time download).
+          </li>
+          <li>
+            <span className="text-mew-text font-medium">
+              Collect your voice packs
+            </span>{' '}
+            — put all downloaded voice pack ZIPs into a single folder.
+          </li>
+          <li>
+            <span className="text-mew-text font-medium">Run the script</span>
+            {' '} — point it at the folder:
+            <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
+              python install_voicepack.py my_voice_packs/
+            </code>
+          </li>
+        </ol>
+        <p className="text-mew-muted text-xs mb-2">
+          On first run, the script saves a vanilla backup of resources.gpak.
+          Every run after that rebuilds from the vanilla baseline — add or
+          remove ZIPs from the folder and re-run to update. Other mods are
+          left untouched. You can also install a single ZIP or pass the gpak
+          path explicitly:
         </p>
-        <code className="block bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
-          python install_voicepack.py voicepack.zip
-        </code>
+        <div className="space-y-1">
+          <code className="block bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
+            python install_voicepack.py single_pack.zip
+          </code>
+          <code className="block bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
+            python install_voicepack.py my_voice_packs/
+            &quot;C:/path/to/resources.gpak&quot;
+          </code>
+        </div>
         <p className="text-mew-muted text-xs mt-2">
-          The script auto-detects your Mewgenics install, backs up
-          resources.gpak, injects the voice files, and registers the pack. You
-          can also pass the gpak path explicitly:
+          To remove all custom voices:{' '}
+          <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">
+            python install_voicepack.py --uninstall
+          </code>
         </p>
-        <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
-          python install_voicepack.py voicepack.zip
-          "C:/path/to/resources.gpak"
-        </code>
 
         <h3 className="text-lg font-bold mt-6 mb-2">Manual install</h3>
         <p className="text-mew-muted text-sm mb-3">
@@ -234,7 +291,7 @@ export function InstructionsPage() {
             <span className="text-mew-text font-medium">
               Copy your pack files
             </span>{' '}
-            — from the ZIP, copy the audio/ folder into the extracted output:
+            — from each ZIP, copy the audio/ folder into the extracted output:
             <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono whitespace-pre-line">
               {'audio/voices/YourPackName.gon\naudio/voices/YourPackName/*.wav'}
             </code>
@@ -251,7 +308,7 @@ export function InstructionsPage() {
             <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">
               voice_sets {'{'}
             </code>{' '}
-            section. Add:
+            section. Add a line for each pack:
             <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
               YourPackName 1
             </code>
@@ -267,15 +324,16 @@ export function InstructionsPage() {
             </span>{' '}
             resources.gpak in your game folder with the repacked one.
           </li>
-          <li>Launch the game. Your voice pack will be available.</li>
+          <li>Launch the game. Your voice packs will be available.</li>
         </ol>
 
-        <div className="mt-4 bg-mew-bg rounded-lg p-4 border border-yellow-500/20">
-          <p className="text-yellow-400 text-sm font-medium mb-1">Important</p>
+        <div className="mt-4 bg-amber-900/20 rounded-lg p-4 border border-amber-700/30">
+          <p className="text-amber-400 text-sm font-medium mb-1">Important</p>
           <p className="text-mew-muted text-xs">
-            Keep a backup of your original resources.gpak. Game updates may
-            overwrite modified files. The install script creates backups
-            automatically.
+            The install script saves a permanent vanilla baseline
+            (resources_vanilla.gpak) on first run. If a game update replaces
+            resources.gpak, delete the old resources_vanilla.gpak and re-run
+            to create a fresh baseline.
           </p>
         </div>
       </section>

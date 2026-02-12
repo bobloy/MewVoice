@@ -30,21 +30,23 @@ def generate_voice_gon(set_name, folder, action_files, is_female=False, comment=
 
 def generate_catgen_patch(pack_name, gender="male"):
     return f"""========================================
-  Mewgenics Voice Pack - Install Guide
+  MewVoice — Install Guide
 ========================================
 
 Voice Pack: {pack_name}
 
-AUTOMATIC INSTALL:
-------------------
-Run the included script (requires Python 3):
+AUTOMATIC INSTALL (recommended):
+---------------------------------
+Download install_voicepack.py from MewVoice, then put your
+downloaded voice pack ZIPs into a folder and run:
 
-    python install_voicepack.py THIS_ZIP_FILE.zip
+    python install_voicepack.py my_voice_packs/
 
-It will auto-detect your game, back up resources.gpak, inject the
-voice files, and register the pack. Or pass the path explicitly:
+On first run it saves a vanilla baseline. Every run after that
+rebuilds from the baseline — add/remove ZIPs and re-run.
 
-    python install_voicepack.py THIS_ZIP_FILE.zip "path/to/resources.gpak"
+Single ZIP:  python install_voicepack.py {pack_name}.zip
+Uninstall:   python install_voicepack.py --uninstall
 
 
 MANUAL INSTALL:

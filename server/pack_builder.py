@@ -2,8 +2,6 @@
 import json, zipfile
 from pathlib import Path
 
-INSTALL_SCRIPT = Path(__file__).parent / "install_voicepack.py"
-
 def build_voice_pack_zip(build_dir, pack_name, output_dir, metadata):
     build_path = Path(build_dir)
     build_id = metadata.get("build_id", pack_name)
@@ -13,8 +11,6 @@ def build_voice_pack_zip(build_dir, pack_name, output_dir, metadata):
         inst = build_path / "INSTALL_INSTRUCTIONS.txt"
         if inst.exists():
             zf.write(str(inst), "INSTALL_INSTRUCTIONS.txt")
-        if INSTALL_SCRIPT.exists():
-            zf.write(str(INSTALL_SCRIPT), "install_voicepack.py")
         audio_dir = build_path / "audio"
         if audio_dir.exists():
             for fp in audio_dir.rglob("*"):

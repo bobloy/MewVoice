@@ -2,13 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-charcoal: #1C1917;        /* Page background — deep warm black */
+  --color-mushroom: #302B28;        /* Cards, panels — dark brown */
+  --color-olive: #5C6349;           /* Buttons, borders — muted olive */
+  --color-olive-hover: #4A5039;     /* Olive hover */
+  --color-sage: #8F9A82;            /* Decorative, subtle accents */
+  --color-parchment: #C4B8A9;       /* Secondary text — warm muted */
+  --color-cream: #E8E0D4;           /* Primary text — warm white */
+  --color-ember: #C47A4A;           /* CTA buttons, notifications */
+}
+
 body {
   margin: 0;
   font-family: 'Fredoka', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #1a1a2e;
-  color: #eee;
+  background-color: var(--color-charcoal);
+  color: var(--color-cream);
 }
 
 /* Scrollbar styling */
@@ -16,23 +27,33 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #1a1a2e;
+  background: var(--color-mushroom);
 }
 ::-webkit-scrollbar-thumb {
-  background: #0f3460;
+  background: var(--color-olive);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #e94560;
+  background: var(--color-olive-hover);
 }
 
-/* Audio player theming */
+/* Audio player theming (Chromium) */
 audio::-webkit-media-controls-panel {
-  background: #16213e;
+  background: var(--color-mushroom);
+}
+audio::-webkit-media-controls-enclosure {
+  background: var(--color-mushroom);
+  border-radius: 8px;
+  overflow: hidden;
+}
+audio::-webkit-media-controls-play-button,
+audio::-webkit-media-controls-mute-button {
+  background-color: var(--color-mushroom);
+  border-radius: 50%;
 }
 
 /* Selection color */
 ::selection {
-  background: #e9456060;
-  color: #fff;
+  background: rgba(196, 122, 74, 0.35);
+  color: var(--color-cream);
 }
