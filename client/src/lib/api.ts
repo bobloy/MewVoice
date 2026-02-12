@@ -1,4 +1,4 @@
-import { VoicePack, VoicePackMeta, AudioClip, SteamUser } from '@/types/voicepack';
+import { VoicePack, VoicePackMeta, AudioClip, SteamUser, LibraryFilters } from '@/types/voicepack';
 
 const API_BASE = '/api';
 
@@ -67,13 +67,42 @@ export async function publishVoicePack(id: string): Promise<VoicePackMeta> {
   return response.json();
 }
 
-/** List community voice packs */
-export async function listVoicePacks(page = 1, limit = 20): Promise<{
-  packs: VoicePackMeta[];
-  total: number;
-}> {
-  const response = await fetch(`${API_BASE}/voicepacks?page=${page}&limit=${limit}`);
+/** List community voice packs with filtering, sorting, and pagination */
+export async function listVoicePacks(
+  filters: Partial<LibraryFilters> = {},
+  offset = 0,
+  limit = 20,
+): Promise<{ packs: VoicePackMeta[]; total: number; hasMore: boolean }> {
+  const params = new URLSearchParams();
+  params.set('offset', String(offset));
+  params.set('limit', String(limit));
+  if (filters.sort) params.set('sort', filters.sort);
+  if (filters.q) params.set('q', filters.q);
+  if (filters.gender && filters.gender !== 'all') params.set('gender', filters.gender);
+  if (filters.minScore !== undefined) params.set('minScore', String(filters.minScore));
+  if (filters.hasRecommended) params.set('hasRecommended', 'true');
+  if (filters.author) params.set('author', filters.author);
+
+  const response = await fetch(`${API_BASE}/voicepacks?${params}`, { credentials: 'include' });
   if (!response.ok) throw new Error('Failed to load voice packs');
+  return response.json();
+}
+
+/** Vote on a voice pack (1 = upvote, -1 = downvote, 0 = remove vote) */
+export async function voteVoicePack(
+  packId: string,
+  vote: 1 | -1 | 0,
+): Promise<{ score: number; userVote: 1 | -1 | 0 }> {
+  const response = await fetch(`${API_BASE}/voicepacks/${packId}/vote`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ vote }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: 'Vote failed' }));
+    throw new Error(err.detail || 'Vote failed');
+  }
   return response.json();
 }
 
@@ -97,4 +126,10 @@ export function getDownloadUrl(id: string): string {
 /** Download a published voice pack zip */
 export function getPublishedDownloadUrl(id: string): string {
   return `${API_BASE}/voicepacks/${id}/download-published`;
+}
+
+/** Get a preview audio URL for a published voice pack (random clip, optionally filtered by action) */
+export function getPreviewUrl(id: string, action?: string): string {
+  const base = `${API_BASE}/voicepacks/${id}/preview`;
+  return action ? `${base}?action=${action}` : base;
 }

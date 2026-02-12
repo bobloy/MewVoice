@@ -100,7 +100,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         mediaRecorderRef.current = null;
       };
 
-      recorder.start(100);
+      recorder.start();
       startTimeRef.current = Date.now();
       mediaRecorderRef.current = recorder;
       setStream(mediaStream);

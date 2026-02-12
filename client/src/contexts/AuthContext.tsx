@@ -1,15 +1,15 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { SteamUser } from '@/types/voicepack';
 import { getCurrentUser, logout as apiLogout, getSteamLoginUrl } from '@/lib/api';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: SteamUser | null;
   loading: boolean;
   login: () => void;
   logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   login: () => {},
@@ -41,8 +41,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }

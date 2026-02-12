@@ -151,16 +151,16 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
         <div className="flex gap-3">
           <button
             onClick={isRecording ? stopRecording : startRecording}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
               isRecording
-                ? 'bg-mew-highlight hover:bg-mew-highlight/80 text-mew-text'
-                : 'bg-mew-accent hover:bg-mew-accent/80 text-mew-text'
+                ? 'bg-mew-highlight hover:brightness-125 text-mew-text'
+                : 'bg-mew-accent hover:brightness-125 text-white'
             }`}
           >
             {isRecording ? 'Stop' : 'Record'}
           </button>
           {!isRecording && (
-            <label className="flex-1 bg-mew-highlight hover:bg-mew-highlight/80 text-mew-text py-2 px-4 rounded-lg font-medium text-center cursor-pointer transition-colors">
+            <label className="flex-1 bg-mew-highlight hover:brightness-125 text-mew-text py-2 px-4 rounded-lg font-medium text-center cursor-pointer transition-all">
               Upload
               <input
                 type="file"

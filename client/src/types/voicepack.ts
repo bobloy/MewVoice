@@ -57,7 +57,7 @@ export const ACTION_DESCRIPTIONS: Record<VoiceAction, string> = {
  */
 export const ACTION_RECOMMENDED_CLIPS: Record<VoiceAction, { recommended: number; gameMin: number; gameMax: number }> = {
   Normal: { recommended: 4, gameMin: 1, gameMax: 7 },
-  Hit:    { recommended: 4, gameMin: 1, gameMax: 16 },
+  Hit:    { recommended: 5, gameMin: 1, gameMax: 16 },
   Angry:  { recommended: 4, gameMin: 2, gameMax: 24 },
   Happy:  { recommended: 4, gameMin: 2, gameMax: 8 },
   Death:  { recommended: 4, gameMin: 1, gameMax: 11 },
@@ -118,8 +118,21 @@ export interface VoicePackMeta {
   clipCounts: Record<VoiceAction, number>;
   createdAt: string;
   downloads: number;
+  score: number;
+  /** null = not logged in, 0 = no vote cast, 1 = upvoted, -1 = downvoted */
+  userVote?: 1 | -1 | 0 | null;
   // Ownership (present on packs published by a logged-in user)
   steamId?: string;
   steamName?: string;
   steamAvatar?: string;
+}
+
+/** Parameters for querying the voice pack library */
+export interface LibraryFilters {
+  sort: 'newest' | 'top';
+  q: string;
+  gender: 'all' | 'male' | 'female';
+  minScore: number;
+  hasRecommended: boolean;
+  author: string;
 }

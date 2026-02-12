@@ -10,7 +10,7 @@ import {
 } from '@/types/voicepack';
 import { ActionRecorder } from '@/components/recorder/ActionRecorder';
 import { uploadVoicePack, publishVoicePack } from '@/lib/api';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 function createEmptyClips(): Record<VoiceAction, AudioClip[]> {
   const clips: Partial<Record<VoiceAction, AudioClip[]>> = {};
@@ -120,73 +120,72 @@ export function PackBuilder() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Pack metadata */}
-      <div className="bg-mew-surface rounded-xl p-6 mb-6 border border-mew-highlight/30">
-        <h2 className="text-2xl font-bold mb-4">Voice Pack Info</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm text-mew-muted mb-1">Pack Name *</label>
-            <input
-              type="text"
-              value={pack.name}
-              onChange={(e) => setPack((p) => ({ ...p, name: e.target.value }))}
-              placeholder="e.g. Silly Derp Cat"
-              className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
-              disabled={buildStatus === 'done'}
-            />
+      {/* Pack metadata — hidden after build since ZIP is already created */}
+      {buildStatus !== 'done' && (
+        <>
+          <div className="bg-mew-surface rounded-xl p-6 mb-6 border border-mew-highlight/30">
+            <h2 className="text-2xl font-bold mb-4">Voice Pack Info</h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-mew-muted mb-1">Pack Name *</label>
+                  <input
+                    type="text"
+                    value={pack.name}
+                    onChange={(e) => setPack((p) => ({ ...p, name: e.target.value }))}
+                    placeholder="e.g. Silly Derp Cat"
+                    maxLength={50}
+                    className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-mew-muted mb-1">Voice Gender</label>
+                  <select
+                    value={pack.gender}
+                    onChange={(e) => setPack((p) => ({ ...p, gender: e.target.value as VoiceGender }))}
+                    className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text focus:outline-none focus:border-mew-accent"
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm text-mew-muted">Description</label>
+                  <span className={`text-xs ${pack.description.length > 180 ? 'text-amber-400' : 'text-mew-muted/50'}`}>
+                    {pack.description.length}/200
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={pack.description}
+                  onChange={(e) => setPack((p) => ({ ...p, description: e.target.value }))}
+                  placeholder="A goofy cat voice with lots of derp energy"
+                  maxLength={200}
+                  className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
+                />
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm text-mew-muted mb-1">Author</label>
-            <input
-              type="text"
-              value={pack.author}
-              onChange={(e) => setPack((p) => ({ ...p, author: e.target.value }))}
-              placeholder="Your name"
-              className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
-              disabled={buildStatus === 'done'}
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-mew-muted mb-1">Voice Gender</label>
-            <select
-              value={pack.gender}
-              onChange={(e) => setPack((p) => ({ ...p, gender: e.target.value as VoiceGender }))}
-              className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text focus:outline-none focus:border-mew-accent"
-              disabled={buildStatus === 'done'}
-            >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm text-mew-muted mb-1">Description</label>
-            <input
-              type="text"
-              value={pack.description}
-              onChange={(e) => setPack((p) => ({ ...p, description: e.target.value }))}
-              placeholder="A goofy cat voice with lots of derp energy"
-              className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
-              disabled={buildStatus === 'done'}
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* Progress bar */}
-      <div className="bg-mew-surface rounded-xl p-4 mb-6 border border-mew-highlight/30">
-        <div className="flex justify-between text-sm mb-2">
-          <span className="text-mew-muted">Progress</span>
-          <span className="text-mew-text font-medium">{totalClips} clips recorded</span>
-        </div>
-        <div className="w-full bg-mew-bg rounded-full h-2">
-          <div
-            className={`h-2 rounded-full transition-all ${meetsRecommended ? 'bg-green-500' : 'bg-mew-accent'}`}
-            style={{
-              width: `${Math.min(100, (totalClips / (VOICE_ACTIONS.length * 4)) * 100)}%`,
-            }}
-          />
-        </div>
-      </div>
+          {/* Progress bar */}
+          <div className="bg-mew-surface rounded-xl p-4 mb-6 border border-mew-highlight/30">
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-mew-muted">Progress</span>
+              <span className="text-mew-text font-medium">{totalClips} clips recorded</span>
+            </div>
+            <div className="w-full bg-mew-bg rounded-full h-2">
+              <div
+                className={`h-2 rounded-full transition-all ${meetsRecommended ? 'bg-green-500' : 'bg-mew-accent'}`}
+                style={{
+                  width: `${Math.min(100, (totalClips / (VOICE_ACTIONS.length * 4)) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Action recorders */}
       {buildStatus !== 'done' && (
@@ -212,7 +211,7 @@ export function PackBuilder() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href={downloadUrl}
-                className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-mew-text py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+                className="inline-flex items-center justify-center gap-2 bg-green-700 hover:bg-green-600 text-white py-3 px-8 rounded-lg font-bold text-lg transition-colors"
               >
                 Download ZIP
               </a>
@@ -225,7 +224,7 @@ export function PackBuilder() {
                 <button
                   onClick={handlePublish}
                   disabled={publishStatus === 'publishing'}
-                  className="inline-flex items-center justify-center gap-2 bg-mew-accent hover:bg-mew-accent/80 disabled:bg-gray-700 disabled:text-gray-500 text-mew-text py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+                  className="inline-flex items-center justify-center gap-2 bg-mew-accent hover:brightness-125 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-all"
                 >
                   {publishStatus === 'publishing' ? 'Publishing...' : 'Publish to Library'}
                 </button>
@@ -257,13 +256,17 @@ export function PackBuilder() {
             <button
               onClick={handleBuild}
               disabled={buildStatus === 'building' || !canBuild}
-              className="w-full bg-mew-accent hover:bg-mew-accent/80 disabled:bg-gray-700 disabled:text-gray-500 text-mew-text py-3 px-8 rounded-lg font-bold text-lg transition-colors"
+              className="w-full bg-mew-accent hover:brightness-125 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-all"
             >
               {buildStatus === 'building' ? 'Building voice pack...' : 'Build Voice Pack'}
             </button>
-            {!canBuild && totalClips > 0 && pack.name.trim() && (
+            {!canBuild && (
               <p className="text-mew-muted text-sm mt-2 text-center">
-                Still need clips for: {missingCore.join(', ')}
+                {!pack.name.trim() && missingCore.length > 0
+                  ? `Need a pack name and clips for: ${missingCore.join(', ')}`
+                  : !pack.name.trim()
+                    ? 'Enter a pack name to build'
+                    : `Still need clips for: ${missingCore.join(', ')}`}
               </p>
             )}
             {canBuild && !meetsRecommended && (

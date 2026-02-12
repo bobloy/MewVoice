@@ -1,7 +1,7 @@
 """
 MewVoice - API Server
 """
-import os, uuid, shutil, json, zipfile, urllib.parse
+import os, uuid, shutil, json, zipfile, urllib.parse, math, random, io
 from datetime import datetime
 from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
@@ -26,6 +26,7 @@ UPLOADS_DIR = DATA_DIR / "uploads"
 BUILDS_DIR = DATA_DIR / "builds"
 LIBRARY_DIR = DATA_DIR / "library"
 LIBRARY_META = DATA_DIR / "library_meta.json"
+VOTES_FILE = DATA_DIR / "votes.json"
 for d in [UPLOADS_DIR, BUILDS_DIR, LIBRARY_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
@@ -34,6 +35,26 @@ def _load_library_meta():
 
 def _save_library_meta(meta):
     LIBRARY_META.write_text(json.dumps(meta, indent=2))
+
+def _load_votes():
+    return json.loads(VOTES_FILE.read_text()) if VOTES_FILE.exists() else {}
+
+def _save_votes(votes):
+    VOTES_FILE.write_text(json.dumps(votes, indent=2))
+
+def _compute_score(pack_votes: dict) -> int:
+    return sum(pack_votes.values())
+
+# Recommended clip counts per action (must match client ACTION_RECOMMENDED_CLIPS)
+_RECOMMENDED = {
+    "Normal": 4, "Hit": 5, "Angry": 4, "Happy": 4,
+    "Death": 4, "Sad": 4, "Hiss": 4, "Purr": 4, "Sing": 1,
+}
+
+def _meets_recommended(entry: dict) -> bool:
+    """Check if all 9 actions meet their recommended clip counts."""
+    counts = entry.get("clipCounts", {})
+    return all(counts.get(action, 0) >= rec for action, rec in _RECOMMENDED.items())
 
 
 # ── Auth endpoints ───────────────────────────────────────────────────────────
@@ -98,6 +119,14 @@ async def build_voicepack(
     gender: str = Form("male"), description: str = Form(""),
     clips: list[UploadFile] = File(...), clip_actions: list[str] = Form(...),
 ):
+    # Input length limits
+    if len(name) > 50:
+        raise HTTPException(400, "Pack name must be 50 characters or less")
+    if len(description) > 200:
+        raise HTTPException(400, "Description must be 200 characters or less")
+    if len(author) > 50:
+        raise HTTPException(400, "Author must be 50 characters or less")
+
     if len(clips) != len(clip_actions):
         raise HTTPException(400, "clips and clip_actions count mismatch")
     if len(clips) == 0:
@@ -176,6 +205,7 @@ async def publish_voicepack(build_id: str, request: Request):
         "clipCounts": meta.get("clip_counts", {}),
         "createdAt": meta.get("created_at", datetime.utcnow().isoformat()),
         "downloads": 0,
+        "score": 1,
         "steamId": user["steam_id"],
         "steamName": user["persona_name"],
         "steamAvatar": user["avatar_url"],
@@ -183,13 +213,147 @@ async def publish_voicepack(build_id: str, request: Request):
     library = [e for e in _load_library_meta() if e["id"] != build_id]
     library.insert(0, entry)
     _save_library_meta(library)
+
+    # Auto-upvote by the author
+    votes = _load_votes()
+    votes.setdefault(build_id, {})[user["steam_id"]] = 1
+    _save_votes(votes)
+
     return entry
 
+
 @app.get("/api/voicepacks")
-async def list_voicepacks(page: int = 1, limit: int = 20):
+async def list_voicepacks(
+    request: Request,
+    offset: int = 0,
+    limit: int = 20,
+    sort: str = "newest",
+    q: str = "",
+    gender: str = "all",
+    minScore: int = 0,
+    hasRecommended: bool = False,
+    author: str = "",
+):
+    user = get_current_user(request)
     library = _load_library_meta()
-    start = (page-1)*limit
-    return {"packs": library[start:start+limit], "total": len(library)}
+    votes = _load_votes()
+
+    # Sanitize query length
+    q = q[:100]
+
+    # Backfill score for entries that don't have it
+    for entry in library:
+        if "score" not in entry:
+            entry["score"] = _compute_score(votes.get(entry["id"], {}))
+
+    # Filter
+    filtered = library
+    if q:
+        q_lower = q.lower()
+        filtered = [e for e in filtered if
+            q_lower in e.get("name", "").lower() or
+            q_lower in e.get("description", "").lower() or
+            q_lower in e.get("steamName", "").lower() or
+            q_lower in e.get("author", "").lower()
+        ]
+    if gender != "all":
+        filtered = [e for e in filtered if e.get("gender") == gender]
+    if minScore is not None:
+        filtered = [e for e in filtered if e.get("score", 0) >= minScore]
+    if hasRecommended:
+        filtered = [e for e in filtered if _meets_recommended(e)]
+    if author:
+        filtered = [e for e in filtered if e.get("steamId") == author]
+
+    # Sort
+    if sort == "top":
+        filtered.sort(key=lambda e: (-e.get("score", 0), e.get("createdAt", "")))
+    else:  # newest
+        filtered.sort(key=lambda e: e.get("createdAt", ""), reverse=True)
+
+    # Paginate
+    total = len(filtered)
+    page_items = filtered[offset:offset + limit]
+    has_more = (offset + limit) < total
+
+    # Inject userVote
+    if user:
+        steam_id = user["steam_id"]
+        for item in page_items:
+            pack_votes = votes.get(item["id"], {})
+            item["userVote"] = pack_votes.get(steam_id, 0)
+    else:
+        for item in page_items:
+            item["userVote"] = None
+
+    return {"packs": page_items, "total": total, "hasMore": has_more}
+
+
+@app.post("/api/voicepacks/{pack_id}/vote")
+async def vote_voicepack(pack_id: str, request: Request):
+    """Vote on a voice pack. Requires auth. Body: { vote: 1 | -1 | 0 }."""
+    user = require_user(request)
+    body = await request.json()
+    vote = body.get("vote", 0)
+
+    if vote not in (1, -1, 0):
+        raise HTTPException(400, "Vote must be 1, -1, or 0")
+
+    library = _load_library_meta()
+    entry = next((e for e in library if e["id"] == pack_id), None)
+    if not entry:
+        raise HTTPException(404, "Voice pack not found")
+
+    votes = _load_votes()
+    pack_votes = votes.setdefault(pack_id, {})
+
+    if vote == 0:
+        pack_votes.pop(user["steam_id"], None)
+    else:
+        pack_votes[user["steam_id"]] = vote
+
+    # Clean up empty entries
+    if not pack_votes:
+        votes.pop(pack_id, None)
+
+    _save_votes(votes)
+
+    # Update cached score
+    new_score = _compute_score(votes.get(pack_id, {}))
+    for e in library:
+        if e["id"] == pack_id:
+            e["score"] = new_score
+            break
+    _save_library_meta(library)
+
+    return {"score": new_score, "userVote": vote}
+
+
+@app.get("/api/voicepacks/{pack_id}/preview")
+async def preview_voicepack(pack_id: str, action: str = ""):
+    """Stream a random WAV clip from a published voice pack for browser preview."""
+    zip_path = LIBRARY_DIR / f"{pack_id}.zip"
+    if not zip_path.exists():
+        raise HTTPException(404, "Not found")
+
+    with zipfile.ZipFile(str(zip_path), "r") as zf:
+        # Find all wav files, optionally filtered by action
+        wav_files = [
+            n for n in zf.namelist()
+            if n.endswith(".wav") and (not action or n.rsplit("/", 1)[-1].startswith(action.lower()))
+        ]
+        if not wav_files:
+            raise HTTPException(404, "No clips found")
+
+        chosen = random.choice(wav_files)
+        wav_data = zf.read(chosen)
+
+    return Response(
+        content=wav_data,
+        media_type="audio/wav",
+        headers={"Cache-Control": "no-cache"},
+    )
+
 
 @app.get("/api/voicepacks/{pack_id}/download-published")
 async def download_published(pack_id: str):
@@ -215,6 +379,11 @@ async def delete_voicepack(pack_id: str, request: Request):
 
     library = [e for e in library if e["id"] != pack_id]
     _save_library_meta(library)
+
+    # Clean up votes
+    votes = _load_votes()
+    votes.pop(pack_id, None)
+    _save_votes(votes)
 
     lib_zip = LIBRARY_DIR / f"{pack_id}.zip"
     lib_zip.unlink(missing_ok=True)

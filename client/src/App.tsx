@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PackBuilder } from '@/components/pack-builder/PackBuilder';
 import { LibraryBrowser } from '@/components/library/LibraryBrowser';
 import { InstructionsPage } from '@/components/instructions/InstructionsPage';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 type Page = 'create' | 'browse' | 'instructions';
 
@@ -55,11 +55,17 @@ function App() {
                 <div className="w-8 h-8 rounded-full bg-mew-highlight/30 animate-pulse" />
               ) : user ? (
                 <div className="flex items-center gap-2">
-                  <img
-                    src={user.avatarUrl}
-                    alt={user.personaName}
-                    className="w-8 h-8 rounded-full border border-mew-highlight/50"
-                  />
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.personaName}
+                      className="w-8 h-8 rounded-full border border-mew-highlight/50"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-mew-highlight/50 flex items-center justify-center text-xs text-mew-text">
+                      {user.personaName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <span className="text-sm text-mew-text font-medium hidden sm:inline">
                     {user.personaName}
                   </span>

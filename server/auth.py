@@ -16,7 +16,7 @@ from fastapi import Request, HTTPException
 
 # ── Configuration ────────────────────────────────────────────────────────────
 
-JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-change-in-prod")
+JWT_SECRET = os.environ.get("JWT_SECRET", "mewvoice-dev-secret-key-change-me-in-production!!")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_SECONDS = 60 * 60 * 24 * 7  # 7 days
 
@@ -79,7 +79,8 @@ async def fetch_steam_profile(steam_id: str) -> dict:
 
     Requires STEAM_API_KEY env var. Returns a fallback if not set.
     """
-    if not STEAM_API_KEY:
+    api_key = os.environ.get("STEAM_API_KEY", "") or STEAM_API_KEY
+    if not api_key:
         return {
             "steam_id": steam_id,
             "persona_name": f"User_{steam_id[-4:]}",
@@ -88,7 +89,7 @@ async def fetch_steam_profile(steam_id: str) -> dict:
 
     url = (
         f"https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/"
-        f"?key={STEAM_API_KEY}&steamids={steam_id}"
+        f"?key={api_key}&steamids={steam_id}"
     )
 
     async with httpx.AsyncClient() as client:
