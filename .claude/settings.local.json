@@ -45,7 +45,8 @@
       "Bash(for d in */)",
       "Bash(do rm -rf \"$d\")",
       "Bash(done)",
-      "Bash(npx wrangler deploy:*)"
+      "Bash(npx wrangler deploy:*)",
+      "Bash(npm install:*)"
     ]
   }
 }
