@@ -19,7 +19,7 @@
     {
       "binding": "DB",
       "database_name": "mewvoice-db",
-      "database_id": "PLACEHOLDER_REPLACE_WITH_REAL_ID"
+      "database_id": "88ac4dee-2974-4ae5-9f31-64a978e54cef"
     }
   ],
   "vars": {
