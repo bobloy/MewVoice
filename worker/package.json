@@ -6,7 +6,7 @@
     "dev": "wrangler dev --local --port 8787",
     "deploy": "wrangler deploy",
     "db:init": "wrangler d1 execute mewvoice-db --local --file=./schema.sql",
-    "db:init:remote": "wrangler d1 execute mewvoice-db --file=./schema.sql",
+    "db:init:remote": "wrangler d1 execute mewvoice-db --remote --file=./schema.sql",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

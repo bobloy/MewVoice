@@ -1,5 +1,5 @@
 {
-  "name": "mewvoice-api",
+  "name": "mewvoice",
   "main": "src/index.ts",
   "compatibility_date": "2025-01-01",
   "rules": [
