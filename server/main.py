@@ -176,6 +176,10 @@ async def build_voicepack(
         "clip_counts": {a: len(f) for a,f in converted_files.items()},
         "created_at": datetime.utcnow().isoformat(),
     })
+
+    # Clean up expanded build directory — ZIP is the source of truth now
+    shutil.rmtree(str(build_dir), ignore_errors=True)
+
     return {"id": build_id, "packName": pack_name, "downloadUrl": f"/api/voicepacks/{build_id}/download"}
 
 @app.get("/api/voicepacks/{build_id}/download")
