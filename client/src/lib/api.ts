@@ -34,9 +34,11 @@ export async function uploadVoicePack(pack: VoicePack): Promise<{ id: string; do
   formData.append('description', pack.description);
 
   // Append each clip with action/index metadata
+  // Clips are pre-converted to WAV by the client before upload
   for (const [action, clips] of Object.entries(pack.clips)) {
     clips.forEach((clip: AudioClip, index: number) => {
-      formData.append(`clips`, clip.blob, `${action}_${index + 1}.webm`);
+      const ext = clip.blob.type === 'audio/wav' ? '.wav' : '.webm';
+      formData.append(`clips`, clip.blob, `${action}_${index + 1}${ext}`);
       formData.append(`clip_actions`, action);
     });
   }

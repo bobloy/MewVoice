@@ -1,0 +1,28 @@
+{
+  "name": "mewvoice-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "rules": [
+    {
+      "type": "Text",
+      "globs": ["**/*.py"],
+      "fallthrough": false
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PACKS_BUCKET",
+      "bucket_name": "mewvoice-packs"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mewvoice-db",
+      "database_id": "PLACEHOLDER_REPLACE_WITH_REAL_ID"
+    }
+  ],
+  "vars": {
+    "SITE_ORIGIN": "https://mewvoice.com"
+  }
+}

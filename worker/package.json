@@ -1,0 +1,22 @@
+{
+  "name": "mewvoice-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --local --port 8787",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute mewvoice-db --local --file=./schema.sql",
+    "db:init:remote": "wrangler d1 execute mewvoice-db --file=./schema.sql",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.6.0",
+    "jose": "^5.9.0",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250109.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^3.99.0"
+  }
+}

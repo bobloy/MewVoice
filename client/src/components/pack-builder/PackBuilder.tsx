@@ -10,6 +10,7 @@ import {
 } from '@/types/voicepack';
 import { ActionRecorder } from '@/components/recorder/ActionRecorder';
 import { uploadVoicePack, publishVoicePack } from '@/lib/api';
+import { convertToGameWav } from '@/lib/audioConverter';
 import { useAuth } from '@/hooks/useAuth';
 
 function createEmptyClips(): Record<VoiceAction, AudioClip[]> {
@@ -36,7 +37,8 @@ export function PackBuilder() {
     }
   }, [user]);
 
-  const [buildStatus, setBuildStatus] = useState<'idle' | 'building' | 'done' | 'error'>('idle');
+  const [buildStatus, setBuildStatus] = useState<'idle' | 'converting' | 'building' | 'done' | 'error'>('idle');
+  const [conversionProgress, setConversionProgress] = useState({ done: 0, total: 0 });
   const [buildId, setBuildId] = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [publishStatus, setPublishStatus] = useState<'idle' | 'publishing' | 'published' | 'error'>('idle');
@@ -72,11 +74,50 @@ export function PackBuilder() {
   const handleBuild = async () => {
     if (!canBuild) return;
 
-    setBuildStatus('building');
     setErrorMsg('');
 
+    // Phase 1: Convert all clips to WAV client-side
+    setBuildStatus('converting');
+    const allClips: { action: VoiceAction; clip: AudioClip }[] = [];
+    for (const [action, clips] of Object.entries(pack.clips)) {
+      for (const clip of clips) {
+        allClips.push({ action: action as VoiceAction, clip });
+      }
+    }
+    setConversionProgress({ done: 0, total: allClips.length });
+
+    const convertedClips: Record<string, { blob: Blob; action: string }[]> = {};
     try {
-      const result = await uploadVoicePack(pack);
+      for (let i = 0; i < allClips.length; i++) {
+        const { action, clip } = allClips[i];
+        const { wavBlob } = await convertToGameWav(clip.blob);
+        if (!convertedClips[action]) convertedClips[action] = [];
+        convertedClips[action].push({ blob: wavBlob, action });
+        setConversionProgress({ done: i + 1, total: allClips.length });
+      }
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Audio conversion failed');
+      setBuildStatus('error');
+      return;
+    }
+
+    // Phase 2: Build a VoicePack with WAV blobs and upload
+    setBuildStatus('building');
+    try {
+      const wavPack: VoicePack = {
+        ...pack,
+        clips: Object.fromEntries(
+          VOICE_ACTIONS.map((action) => [
+            action,
+            (convertedClips[action] || []).map((c, idx) => ({
+              ...pack.clips[action][idx],
+              blob: c.blob,
+              fileName: `${action}_${idx + 1}.wav`,
+            })),
+          ]),
+        ) as Record<VoiceAction, AudioClip[]>,
+      };
+      const result = await uploadVoicePack(wavPack);
       setBuildId(result.id);
       setDownloadUrl(result.downloadUrl);
       setBuildStatus('done');
@@ -255,10 +296,14 @@ export function PackBuilder() {
           <>
             <button
               onClick={handleBuild}
-              disabled={buildStatus === 'building' || !canBuild}
+              disabled={buildStatus === 'building' || buildStatus === 'converting' || !canBuild}
               className="w-full bg-mew-accent hover:brightness-125 disabled:bg-gray-700 disabled:text-gray-500 text-white py-3 px-8 rounded-lg font-bold text-lg transition-all"
             >
-              {buildStatus === 'building' ? 'Building voice pack...' : 'Build Voice Pack'}
+              {buildStatus === 'converting'
+                ? `Converting audio... (${conversionProgress.done}/${conversionProgress.total})`
+                : buildStatus === 'building'
+                  ? 'Uploading...'
+                  : 'Build Voice Pack'}
             </button>
             {!canBuild && (
               <p className="text-mew-muted text-sm mt-2 text-center">
