@@ -56,8 +56,8 @@ export const ACTION_DESCRIPTIONS: Record<VoiceAction, string> = {
  *   Sing      82    1    1.3   4
  */
 export const ACTION_RECOMMENDED_CLIPS: Record<VoiceAction, { recommended: number; gameMin: number; gameMax: number }> = {
-  Normal: { recommended: 4, gameMin: 1, gameMax: 7 },
-  Hit:    { recommended: 5, gameMin: 1, gameMax: 16 },
+  Normal: { recommended: 4, gameMin: 2, gameMax: 7 },
+  Hit:    { recommended: 5, gameMin: 2, gameMax: 16 },
   Angry:  { recommended: 4, gameMin: 2, gameMax: 24 },
   Happy:  { recommended: 4, gameMin: 2, gameMax: 8 },
   Death:  { recommended: 4, gameMin: 1, gameMax: 11 },

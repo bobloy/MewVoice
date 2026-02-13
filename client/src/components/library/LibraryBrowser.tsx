@@ -162,8 +162,8 @@ export function LibraryBrowser() {
               ))}
             </div>
 
-            {/* Infinite scroll sentinel */}
-            <div ref={sentinelRef} className="py-4 text-center">
+            {/* Infinite scroll sentinel — fixed height prevents layout shift */}
+            <div ref={sentinelRef} className="h-12 flex items-center justify-center">
               {loadingMore && (
                 <div className="flex items-center justify-center gap-2 text-mew-muted">
                   <div className="text-2xl animate-bounce">&#128049;</div>

@@ -2,6 +2,12 @@
   "name": "mewvoice",
   "main": "src/index.ts",
   "compatibility_date": "2025-01-01",
+  "routes": [
+    {
+      "pattern": "mewvoice.com/api/*",
+      "zone_name": "mewvoice.com"
+    }
+  ],
   "rules": [
     {
       "type": "Text",
