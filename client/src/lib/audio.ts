@@ -5,6 +5,7 @@
  */
 
 import { AUDIO_REQUIREMENTS } from '@/types/voicepack';
+import { encodeWav } from '@/lib/audioConverter';
 
 export async function getAudioDuration(blob: Blob): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -95,4 +96,56 @@ export function validateAudioClip(
 
 export function generateClipId(): string {
   return `clip_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Decode any audio Blob into an AudioBuffer.
+ * Resamples to 44100Hz and mixes down to mono.
+ */
+export async function decodeAudio(blob: Blob): Promise<AudioBuffer> {
+  const arrayBuffer = await blob.arrayBuffer();
+  const audioCtx = new AudioContext({ sampleRate: 44100 });
+  let decoded: AudioBuffer;
+  try {
+    decoded = await audioCtx.decodeAudioData(arrayBuffer);
+  } finally {
+    await audioCtx.close();
+  }
+
+  if (decoded.numberOfChannels === 1 && decoded.sampleRate === 44100) {
+    return decoded;
+  }
+
+  const offlineCtx = new OfflineAudioContext(
+    1,
+    Math.ceil(decoded.duration * 44100),
+    44100
+  );
+  const source = offlineCtx.createBufferSource();
+  source.buffer = decoded;
+  source.connect(offlineCtx.destination);
+  source.start(0);
+  return await offlineCtx.startRendering();
+}
+
+/**
+ * Slice an AudioBuffer and return a new Blob (WAV).
+ */
+export async function trimAudio(
+  audioBuffer: AudioBuffer,
+  start: number,
+  end: number
+): Promise<{ blob: Blob; duration: number }> {
+  const sampleRate = audioBuffer.sampleRate;
+  const startSample = Math.floor(start * sampleRate);
+  const endSample = Math.floor(end * sampleRate);
+  const frameCount = Math.max(1, endSample - startSample);
+
+  const trimmedSamples = audioBuffer.getChannelData(0).slice(startSample, endSample);
+  const blob = encodeWav(trimmedSamples, sampleRate);
+
+  return {
+    blob,
+    duration: frameCount / sampleRate,
+  };
 }

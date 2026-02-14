@@ -46,7 +46,10 @@
       "Bash(do rm -rf \"$d\")",
       "Bash(done)",
       "Bash(npx wrangler deploy:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
     ]
   }
 }

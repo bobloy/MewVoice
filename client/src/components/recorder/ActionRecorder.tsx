@@ -11,27 +11,33 @@ import {
 import { validateAudioClip, generateClipId, getAudioDuration } from '@/lib/audio';
 import { playWithRandomPitch } from '@/lib/pitchPreview';
 import { LiveWaveform } from '@/components/recorder/LiveWaveform';
+import { TrimModal } from '@/components/recorder/TrimModal';
 
 interface ActionRecorderProps {
   action: VoiceAction;
   clips: AudioClip[];
   onAddClip: (clip: AudioClip) => void;
   onRemoveClip: (clipId: string) => void;
+  onUpdateClip: (clip: AudioClip) => void;
 }
 
-export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: ActionRecorderProps) {
+export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdateClip }: ActionRecorderProps) {
   const {
     isRecording,
     stream,
     audioBlob,
     duration,
     elapsed,
+    prepare,
     startRecording,
     stopRecording,
     clearRecording,
+    isPreparing,
     error,
   } = useAudioRecorder();
   const [isUploading, setIsUploading] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [trimmingClip, setTrimmingClip] = useState<AudioClip | null>(null);
   const info = ACTION_RECOMMENDED_CLIPS[action];
   const isCore = CORE_ACTIONS.includes(action);
   const meetsRecommended = clips.length >= info.recommended;
@@ -43,6 +49,32 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
     : !meetsMinimum && isCore
       ? 'bg-red-900/40 text-red-400'
       : 'bg-amber-900/40 text-amber-400';
+
+  // Handle countdown
+  useEffect(() => {
+    if (countdown === null) return;
+
+    if (countdown === 0) {
+      setCountdown(null);
+      startRecording();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCountdown(countdown - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [countdown, startRecording]);
+
+  const handleRecordClick = async () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      setCountdown(3);
+      await prepare();
+    }
+  };
 
   // Auto-keep: when a recording finishes, save it immediately
   useEffect(() => {
@@ -65,6 +97,11 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
     onAddClip(clip);
     clearRecording();
   }, [audioBlob, isRecording]);
+
+  const handleSaveTrim = (updatedClip: AudioClip) => {
+    onUpdateClip(updatedClip);
+    setTrimmingClip(null);
+  };
 
   const handleFileUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +162,13 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
               <audio src={clip.url} controls className="h-8 flex-1" />
               <span className="text-xs text-mew-muted">{clip.duration.toFixed(1)}s</span>
               <button
+                onClick={() => setTrimmingClip(clip)}
+                className="text-mew-muted hover:text-mew-accent text-sm px-1.5 py-0.5 rounded hover:bg-mew-highlight/30 transition-colors"
+                title="Trim clip"
+              >
+                ✂️
+              </button>
+              <button
                 onClick={() => playWithRandomPitch(clip.blob)}
                 className="text-mew-muted hover:text-mew-accent text-sm px-1.5 py-0.5 rounded hover:bg-mew-highlight/30 transition-colors"
                 title="Preview with random pitch (simulates in-game sound)"
@@ -150,14 +194,15 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
         {/* Record + Stop share the same position; Upload hides while recording */}
         <div className="flex gap-3">
           <button
-            onClick={isRecording ? stopRecording : startRecording}
+            onClick={handleRecordClick}
+            disabled={isPreparing || countdown !== null}
             className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
               isRecording
                 ? 'bg-mew-highlight hover:brightness-125 text-mew-text'
-                : 'bg-mew-accent hover:brightness-125 text-white'
+                : 'bg-mew-accent hover:brightness-125 text-white disabled:opacity-50'
             }`}
           >
-            {isRecording ? 'Stop' : 'Record'}
+            {isRecording ? 'Stop' : countdown !== null ? `Starting in ${countdown}...` : isPreparing ? 'Preparing Mic...' : 'Record'}
           </button>
           {!isRecording && (
             <label className="flex-1 bg-mew-highlight hover:brightness-125 text-mew-text py-2 px-4 rounded-lg font-medium text-center cursor-pointer transition-all">
@@ -203,6 +248,14 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip }: Actio
       </div>
 
       {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+
+      {trimmingClip && (
+        <TrimModal
+          clip={trimmingClip}
+          onSave={handleSaveTrim}
+          onClose={() => setTrimmingClip(null)}
+        />
+      )}
     </div>
   );
 }

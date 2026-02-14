@@ -5,12 +5,14 @@ const MAX_DURATION = AUDIO_REQUIREMENTS.maxDurationSec;
 
 interface UseAudioRecorderReturn {
   isRecording: boolean;
+  isPreparing: boolean;
   stream: MediaStream | null;
   audioBlob: Blob | null;
   audioUrl: string | null;
   duration: number;
   elapsed: number;
-  startRecording: () => Promise<void>;
+  prepare: () => Promise<MediaStream | null>;
+  startRecording: (existingStream?: MediaStream) => Promise<void>;
   stopRecording: () => void;
   clearRecording: () => void;
   error: string | null;
@@ -18,6 +20,7 @@ interface UseAudioRecorderReturn {
 
 export function useAudioRecorder(): UseAudioRecorderReturn {
   const [isRecording, setIsRecording] = useState(false);
+  const [isPreparing, setIsPreparing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -62,10 +65,10 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     }
   }, [isRecording]);
 
-  const startRecording = useCallback(async () => {
+  const prepare = useCallback(async () => {
+    setError(null);
+    setIsPreparing(true);
     try {
-      setError(null);
-      setElapsed(0);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 44100,
@@ -74,6 +77,34 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
           noiseSuppression: true,
         },
       });
+      setStream(mediaStream);
+      return mediaStream;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to access microphone.';
+      setError(msg);
+      return null;
+    } finally {
+      setIsPreparing(false);
+    }
+  }, []);
+
+  const startRecording = useCallback(async (existingStream?: MediaStream) => {
+    try {
+      setError(null);
+      setElapsed(0);
+      
+      let mediaStream = existingStream || stream;
+      
+      if (!mediaStream) {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            sampleRate: 44100,
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true,
+          },
+        });
+      }
 
       const recorder = new MediaRecorder(mediaStream, {
         mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
@@ -95,7 +126,9 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         setAudioBlob(blob);
         setAudioUrl(url);
         setDuration(Math.min((Date.now() - startTimeRef.current) / 1000, MAX_DURATION));
-        mediaStream.getTracks().forEach((t) => t.stop());
+        
+        // Stop all tracks to release the microphone
+        mediaStream?.getTracks().forEach((t) => t.stop());
         setStream(null);
         mediaRecorderRef.current = null;
       };
@@ -112,7 +145,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
           : 'Failed to access microphone. Please allow microphone access.'
       );
     }
-  }, []);
+  }, [stream]);
 
   const clearRecording = useCallback(() => {
     if (audioUrl) URL.revokeObjectURL(audioUrl);
@@ -124,11 +157,13 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
 
   return {
     isRecording,
+    isPreparing,
     stream,
     audioBlob,
     audioUrl,
     duration,
     elapsed,
+    prepare,
     startRecording,
     stopRecording,
     clearRecording,

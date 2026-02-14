@@ -71,6 +71,18 @@ export function PackBuilder() {
     }));
   }, []);
 
+  const handleUpdateClip = useCallback((updatedClip: AudioClip) => {
+    setPack((prev) => ({
+      ...prev,
+      clips: {
+        ...prev.clips,
+        [updatedClip.action]: prev.clips[updatedClip.action].map((c) =>
+          c.id === updatedClip.id ? updatedClip : c
+        ),
+      },
+    }));
+  }, []);
+
   const handleBuild = async () => {
     if (!canBuild) return;
 
@@ -238,6 +250,7 @@ export function PackBuilder() {
               clips={pack.clips[action]}
               onAddClip={handleAddClip}
               onRemoveClip={(clipId) => handleRemoveClip(action, clipId)}
+              onUpdateClip={handleUpdateClip}
             />
           ))}
         </div>

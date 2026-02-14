@@ -147,7 +147,7 @@ function trimSilence(samples: Float32Array, threshDbfs: number): Float32Array {
 /**
  * Encode Float32 samples as a 16-bit PCM WAV file.
  */
-function encodeWav(samples: Float32Array, sampleRate: number): Blob {
+export function encodeWav(samples: Float32Array, sampleRate: number): Blob {
   const numChannels = 1;
   const bitsPerSample = 16;
   const bytesPerSample = bitsPerSample / 8;
