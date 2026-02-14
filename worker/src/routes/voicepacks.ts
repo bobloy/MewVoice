@@ -162,6 +162,9 @@ voicepackRoutes.post('/:buildId/publish', async (c) => {
     .bind(libraryKey, user.steam_id, user.persona_name, user.avatar_url, buildId)
     .run();
 
+  // Delete original build from R2 to save space
+  await c.env.PACKS_BUCKET.delete(row.r2_key);
+
   // Auto-upvote by author
   await c.env.DB.prepare('INSERT OR REPLACE INTO votes (pack_id, steam_id, vote) VALUES (?, ?, 1)')
     .bind(buildId, user.steam_id)
@@ -181,6 +184,14 @@ voicepackRoutes.post('/:buildId/publish', async (c) => {
 /** List published voice packs with filtering, sorting, and pagination */
 voicepackRoutes.get('/', async (c) => {
   const user = await getCurrentUser(c);
+
+  // Check cache for anonymous requests
+  const cache = caches.default;
+  const cacheKey = new Request(c.req.url, c.req.raw);
+  if (!user) {
+    const cached = await cache.match(cacheKey);
+    if (cached) return cached;
+  }
 
   const offset = Math.max(0, parseInt(c.req.query('offset') || '0') || 0);
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') || '20') || 20));
@@ -249,18 +260,27 @@ voicepackRoutes.get('/', async (c) => {
     );
   }
 
-  // Set userVote to null for unauthenticated users
   if (!user) {
     packs.forEach((p) => { p.userVote = null; });
   } else {
     packs.forEach((p) => { if (p.userVote === null) p.userVote = 0; });
   }
 
-  return c.json({
+  const response = c.json({
     packs,
     total,
     hasMore: offset + limit < total,
   });
+
+  // Cache anonymous responses for 1 minute
+  if (!user) {
+    response.headers.set('Cache-Control', 'public, max-age=60');
+    c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
+  } else {
+    response.headers.set('Cache-Control', 'private, no-cache');
+  }
+
+  return response;
 });
 
 /** Vote on a voice pack */
@@ -312,6 +332,11 @@ voicepackRoutes.get('/:packId/preview', async (c) => {
   const packId = c.req.param('packId');
   const actionFilter = c.req.query('action') || '';
 
+  // Check cache
+  const cache = caches.default;
+  const cached = await cache.match(c.req.raw);
+  if (cached) return cached;
+
   const row = await c.env.DB.prepare('SELECT r2_key FROM packs WHERE id = ? AND published = 1').bind(packId).first<{ r2_key: string }>();
   if (!row) return c.json({ detail: 'Not found' }, 404);
 
@@ -328,12 +353,15 @@ voicepackRoutes.get('/:packId/preview', async (c) => {
   const chosen = wavFiles[Math.floor(Math.random() * wavFiles.length)];
   const wavData = await extractFile(zipData, chosen);
 
-  return new Response(wavData, {
+  const response = new Response(wavData, {
     headers: {
       'Content-Type': 'audio/wav',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'public, max-age=3600', // Cache previews for 1 hour
     },
   });
+
+  c.executionCtx.waitUntil(cache.put(c.req.raw, response.clone()));
+  return response;
 });
 
 /** Download a published voice pack ZIP */

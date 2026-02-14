@@ -12,6 +12,7 @@ installRoutes.get('/install-script', (c) => {
     headers: {
       'Content-Type': 'text/x-python',
       'Content-Disposition': 'attachment; filename="install_voicepack.py"',
+      'Cache-Control': 'public, max-age=86400', // Cache for 1 day
     },
   });
 });
