@@ -36,7 +36,6 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
     error,
   } = useAudioRecorder();
   const [isUploading, setIsUploading] = useState(false);
-  const [countdown, setCountdown] = useState<number | null>(null);
   const [trimmingClip, setTrimmingClip] = useState<AudioClip | null>(null);
   const info = ACTION_RECOMMENDED_CLIPS[action];
   const isCore = CORE_ACTIONS.includes(action);
@@ -50,29 +49,14 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
       ? 'bg-red-900/40 text-red-400'
       : 'bg-amber-900/40 text-amber-400';
 
-  // Handle countdown
-  useEffect(() => {
-    if (countdown === null) return;
-
-    if (countdown === 0) {
-      setCountdown(null);
-      startRecording();
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setCountdown(countdown - 1);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [countdown, startRecording]);
-
   const handleRecordClick = async () => {
     if (isRecording) {
       stopRecording();
     } else {
-      setCountdown(3);
-      await prepare();
+      const s = await prepare();
+      if (s) {
+        startRecording(s);
+      }
     }
   };
 
@@ -195,14 +179,14 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
         <div className="flex gap-3">
           <button
             onClick={handleRecordClick}
-            disabled={isPreparing || countdown !== null}
+            disabled={isPreparing}
             className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
               isRecording
                 ? 'bg-mew-highlight hover:brightness-125 text-mew-text'
                 : 'bg-mew-accent hover:brightness-125 text-white disabled:opacity-50'
             }`}
           >
-            {isRecording ? 'Stop' : countdown !== null ? `Starting in ${countdown}...` : isPreparing ? 'Preparing Mic...' : 'Record'}
+            {isRecording ? 'Stop' : isPreparing ? 'Preparing Mic...' : 'Record'}
           </button>
           {!isRecording && (
             <label className="flex-1 bg-mew-highlight hover:brightness-125 text-mew-text py-2 px-4 rounded-lg font-medium text-center cursor-pointer transition-all">
