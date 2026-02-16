@@ -179,7 +179,7 @@ export function InstructionsPage() {
         <p className="text-mew-muted text-sm mb-4">
           MewVoice packs are compatible with the{' '}
           <a
-            href="https://github.com/ShootMe/Mewtator"
+            href="https://www.nexusmods.com/mewgenics/mods/1"
             target="_blank"
             rel="noopener noreferrer"
             className="text-mew-accent hover:underline"
@@ -193,7 +193,7 @@ export function InstructionsPage() {
         <ol className="space-y-3 text-mew-muted text-sm list-decimal list-inside mb-4">
           <li>
             <span className="text-mew-text font-medium">Install Mewtator</span> —
-            follow the instructions on the Mewtator GitHub page to set up the mod loader.
+            follow the instructions on the Nexus Mods page to set up the mod loader.
           </li>
           <li>
             <span className="text-mew-text font-medium">Download your voice packs</span> —
