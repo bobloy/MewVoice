@@ -10,7 +10,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from audio_converter import convert_to_game_wav
 from gon_generator import generate_voice_gon, generate_catgen_patch
-from pack_builder import build_voice_pack_zip
 from auth import (
     build_steam_openid_params, verify_steam_openid, fetch_steam_profile,
     create_jwt_token, get_current_user, require_user,
@@ -165,41 +164,54 @@ async def build_voicepack(
             converted_files[action].append(wav_name)
             src_path.unlink(missing_ok=True)
 
-    gon_content = generate_voice_gon(pack_name, f"voices/{pack_name}",
-        converted_files, is_female=(gender=="female"))
-    (build_dir / "audio" / "voices" / f"{pack_name}.gon").write_text(gon_content)
-    (build_dir / "INSTALL_INSTRUCTIONS.txt").write_text(generate_catgen_patch(pack_name, gender))
-
-    build_voice_pack_zip(str(build_dir), pack_name, str(BUILDS_DIR), metadata={
+    metadata = {
         "name": name, "author": author, "gender": gender, "description": description,
         "pack_name": pack_name, "build_id": build_id,
         "clip_counts": {a: len(f) for a,f in converted_files.items()},
         "created_at": datetime.utcnow().isoformat(),
-    })
+    }
+    (build_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
 
-    # Clean up expanded build directory — ZIP is the source of truth now
-    shutil.rmtree(str(build_dir), ignore_errors=True)
+    gon_content = generate_voice_gon(pack_name, f"voices/{pack_name}",
+        converted_files, is_female=(gender=="female"))
+    (build_dir / "audio" / "voices" / f"{pack_name}.gon").write_text(gon_content)
+
+    data_dir = build_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    (data_dir / "catgen.gon.patch").write_text(generate_catgen_patch(pack_name))
 
     return {"id": build_id, "packName": pack_name, "downloadUrl": f"/api/voicepacks/{build_id}/download"}
 
 @app.get("/api/voicepacks/{build_id}/download")
 async def download_voicepack(build_id: str):
-    zip_path = BUILDS_DIR / f"{build_id}.zip"
-    if not zip_path.exists(): raise HTTPException(404, "Voice pack not found")
-    return FileResponse(str(zip_path), media_type="application/zip",
-        filename=f"mewgenics_voicepack_{build_id}.zip")
+    build_dir = BUILDS_DIR / build_id
+    if not build_dir.exists(): raise HTTPException(404, "Voice pack not found")
+
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for root, dirs, files in os.walk(build_dir):
+            for file in files:
+                file_path = Path(root) / file
+                arcname = file_path.relative_to(build_dir)
+                zf.write(file_path, arcname)
+    memory_file.seek(0)
+    return Response(
+        memory_file.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename=mewgenics_voicepack_{build_id}.zip"}
+    )
 
 @app.post("/api/voicepacks/{build_id}/publish")
 async def publish_voicepack(build_id: str, request: Request):
     user = require_user(request)
-    zip_path = BUILDS_DIR / f"{build_id}.zip"
-    if not zip_path.exists(): raise HTTPException(404, "Build first.")
-    lib_path = LIBRARY_DIR / f"{build_id}.zip"
-    shutil.copy2(str(zip_path), str(lib_path))
-    meta = {}
-    with zipfile.ZipFile(str(zip_path), "r") as zf:
-        if "metadata.json" in zf.namelist():
-            meta = json.loads(zf.read("metadata.json"))
+    build_dir = BUILDS_DIR / build_id
+    if not build_dir.exists(): raise HTTPException(404, "Build first.")
+    lib_path = LIBRARY_DIR / build_id
+    if lib_path.exists(): shutil.rmtree(lib_path)
+    shutil.copytree(build_dir, lib_path)
+
+    meta_file = lib_path / "metadata.json"
+    meta = json.loads(meta_file.read_text()) if meta_file.exists() else {}
     entry = {
         "id": build_id,
         "name": meta.get("name", "Untitled"),
@@ -336,39 +348,46 @@ async def vote_voicepack(pack_id: str, request: Request):
 @app.get("/api/voicepacks/{pack_id}/preview")
 async def preview_voicepack(pack_id: str, action: str = ""):
     """Stream a random WAV clip from a published voice pack for browser preview."""
-    zip_path = LIBRARY_DIR / f"{pack_id}.zip"
-    if not zip_path.exists():
+    pack_dir = LIBRARY_DIR / pack_id
+    if not pack_dir.exists():
         raise HTTPException(404, "Not found")
 
-    with zipfile.ZipFile(str(zip_path), "r") as zf:
-        # Find all wav files, optionally filtered by action
-        wav_files = [
-            n for n in zf.namelist()
-            if n.endswith(".wav") and (not action or n.rsplit("/", 1)[-1].startswith(action.lower()))
-        ]
-        if not wav_files:
-            raise HTTPException(404, "No clips found")
+    # Find all wav files, optionally filtered by action
+    wav_files = list(pack_dir.rglob("*.wav"))
+    if action:
+        action_lower = action.lower()
+        wav_files = [f for f in wav_files if f.name.lower().startswith(action_lower)]
 
-        chosen = random.choice(wav_files)
-        wav_data = zf.read(chosen)
+    if not wav_files:
+        raise HTTPException(404, "No clips found")
 
-    return Response(
-        content=wav_data,
-        media_type="audio/wav",
-        headers={"Cache-Control": "no-cache"},
-    )
+    chosen = random.choice(wav_files)
+    return FileResponse(str(chosen), media_type="audio/wav", headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/api/voicepacks/{pack_id}/download-published")
 async def download_published(pack_id: str):
-    zip_path = LIBRARY_DIR / f"{pack_id}.zip"
-    if not zip_path.exists(): raise HTTPException(404, "Not found")
+    pack_dir = LIBRARY_DIR / pack_id
+    if not pack_dir.exists(): raise HTTPException(404, "Not found")
+
     library = _load_library_meta()
     for e in library:
         if e["id"] == pack_id: e["downloads"] = e.get("downloads",0)+1; break
     _save_library_meta(library)
-    return FileResponse(str(zip_path), media_type="application/zip",
-        filename=f"mewgenics_voicepack_{pack_id}.zip")
+
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for root, dirs, files in os.walk(pack_dir):
+            for file in files:
+                file_path = Path(root) / file
+                arcname = file_path.relative_to(pack_dir)
+                zf.write(file_path, arcname)
+    memory_file.seek(0)
+    return Response(
+        memory_file.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename=mewgenics_voicepack_{pack_id}.zip"}
+    )
 
 @app.delete("/api/voicepacks/{pack_id}")
 async def delete_voicepack(pack_id: str, request: Request):
@@ -389,18 +408,11 @@ async def delete_voicepack(pack_id: str, request: Request):
     votes.pop(pack_id, None)
     _save_votes(votes)
 
-    lib_zip = LIBRARY_DIR / f"{pack_id}.zip"
-    lib_zip.unlink(missing_ok=True)
+    lib_dir = LIBRARY_DIR / pack_id
+    if lib_dir.exists():
+        shutil.rmtree(lib_dir)
 
     return {"ok": True, "id": pack_id}
-
-@app.get("/api/install-script")
-async def download_install_script():
-    script_path = Path(__file__).parent / "install_voicepack.py"
-    if not script_path.exists():
-        raise HTTPException(404, "Install script not found")
-    return FileResponse(str(script_path), media_type="text/x-python",
-        filename="install_voicepack.py")
 
 @app.get("/api/health")
 async def health():

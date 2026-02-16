@@ -3,7 +3,6 @@ import { cors } from 'hono/cors';
 import type { Env } from './types';
 import { authRoutes } from './routes/auth';
 import { voicepackRoutes } from './routes/voicepacks';
-import { installRoutes } from './routes/install';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -19,7 +18,6 @@ app.use('/api/*', cors({
 // Routes
 app.route('/api/auth', authRoutes);
 app.route('/api/voicepacks', voicepackRoutes);
-app.route('/api', installRoutes);
 
 // Health check
 app.get('/api/health', (c) => c.json({ status: 'ok', version: '1.0.0' }));

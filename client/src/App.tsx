@@ -101,7 +101,7 @@ function App() {
       <footer className="border-t border-mew-highlight/20 py-6 mt-12">
         <p className="text-center text-mew-muted text-sm">
           Community tool — not affiliated with Edmund McMillen or Tyler Glaiel.
-          Voice packs are compatible with Mewgenics GPAK format.
+          Voice packs are compatible with Mewtator for Mewgenics.
         </p>
       </footer>
     </div>

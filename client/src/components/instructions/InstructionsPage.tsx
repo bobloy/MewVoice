@@ -6,23 +6,6 @@ import {
   AUDIO_REQUIREMENTS,
 } from '@/types/voicepack';
 
-function downloadInstallScript() {
-  fetch('/api/install-script')
-    .then((res) => {
-      if (!res.ok) throw new Error('Download failed');
-      return res.blob();
-    })
-    .then((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'install_voicepack.py';
-      a.click();
-      URL.revokeObjectURL(url);
-    })
-    .catch(() => alert('Could not download install script. Is the server running?'));
-}
-
 export function InstructionsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -75,8 +58,7 @@ export function InstructionsPage() {
           </li>
           <li>
             <span className="text-mew-text font-medium">Install</span> —
-            collect your downloaded ZIPs into a folder and run the install
-            script. See below.
+            extract your downloaded ZIPs into the game's mods folder. See below.
           </li>
         </ol>
       </section>
@@ -195,145 +177,60 @@ export function InstructionsPage() {
         <h2 className="text-2xl font-bold mb-3">Installing voice packs</h2>
 
         <p className="text-mew-muted text-sm mb-4">
-          Download as many voice packs as you like, then install them all at
-          once with the standalone install script. You need{' '}
+          MewVoice packs are compatible with the{' '}
           <a
-            href="https://www.python.org/downloads/"
+            href="https://github.com/ShootMe/Mewtator"
             target="_blank"
             rel="noopener noreferrer"
             className="text-mew-accent hover:underline"
           >
-            Python 3
+            Mewtator
           </a>{' '}
-          installed.
+          mod loader.
         </p>
 
-        <button
-          onClick={downloadInstallScript}
-          className="mb-4 px-4 py-2 bg-mew-accent hover:bg-mew-accent/80 text-mew-text rounded-lg font-medium text-sm transition-colors"
-        >
-          Download install_voicepack.py
-        </button>
-
-        <h3 className="text-lg font-bold mt-4 mb-2">Automatic install</h3>
+        <h3 className="text-lg font-bold mt-4 mb-2">Instructions</h3>
         <ol className="space-y-3 text-mew-muted text-sm list-decimal list-inside mb-4">
           <li>
-            <span className="text-mew-text font-medium">
-              Download the install script
-            </span>{' '}
-            — use the button above (one-time download).
+            <span className="text-mew-text font-medium">Install Mewtator</span> —
+            follow the instructions on the Mewtator GitHub page to set up the mod loader.
           </li>
           <li>
-            <span className="text-mew-text font-medium">
-              Collect your voice packs
-            </span>{' '}
-            — put all downloaded voice pack ZIPs into a single folder.
+            <span className="text-mew-text font-medium">Download your voice packs</span> —
+            get the ZIP files for the voices you want to use.
           </li>
           <li>
-            <span className="text-mew-text font-medium">Run the script</span>
-            {' '} — point it at the folder:
-            <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
-              python install_voicepack.py my_voice_packs/
-            </code>
+            <span className="text-mew-text font-medium">Extract to mods folder</span> —
+            unzip each pack into a new subfolder in your Mewgenics <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">mods/</code> directory.
+            <div className="mt-2 pl-6 border-l-2 border-mew-highlight/20">
+              <p className="text-xs">Your mods folder should look like this:</p>
+              <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono whitespace-pre">
+                Mewgenics/mods/{"\n"}
+                ├── MyCoolVoice/{"\n"}
+                │   ├── audio/{"\n"}
+                │   │   └── voices/{"\n"}
+                │   │       ├── MyCoolVoice.gon{"\n"}
+                │   │       └── MyCoolVoice/{"\n"}
+                │   │           └── ...wav{"\n"}
+                │   └── data/{"\n"}
+                │       └── catgen.gon.patch{"\n"}
+                └── AnotherVoice/{"\n"}
+                {"    "}└── ...
+              </code>
+            </div>
+          </li>
+          <li>
+            <span className="text-mew-text font-medium">Launch the game</span> —
+            Mewtator will automatically detect the mods and apply the patches.
           </li>
         </ol>
-        <p className="text-mew-muted text-xs mb-2">
-          On first run, the script saves a vanilla backup of resources.gpak.
-          Every run after that rebuilds from the vanilla baseline — add or
-          remove ZIPs from the folder and re-run to update. Other mods are
-          left untouched. You can also install a single ZIP or pass the gpak
-          path explicitly:
-        </p>
-        <div className="space-y-1">
-          <code className="block bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
-            python install_voicepack.py single_pack.zip
-          </code>
-          <code className="block bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
-            python install_voicepack.py my_voice_packs/
-            &quot;C:/path/to/resources.gpak&quot;
-          </code>
-        </div>
-        <p className="text-mew-muted text-xs mt-2">
-          To remove all custom voices:{' '}
-          <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">
-            python install_voicepack.py --uninstall
-          </code>
-        </p>
 
-        <h3 className="text-lg font-bold mt-6 mb-2">Manual install</h3>
-        <p className="text-mew-muted text-sm mb-3">
-          If you prefer to do it by hand:
-        </p>
-        <ol className="space-y-3 text-mew-muted text-sm list-decimal list-inside">
-          <li>
-            <span className="text-mew-text font-medium">
-              Back up resources.gpak
-            </span>{' '}
-            — find it in your Mewgenics install folder and copy it somewhere
-            safe.
-          </li>
-          <li>
-            <span className="text-mew-text font-medium">
-              Extract the game archive
-            </span>{' '}
-            — use the{' '}
-            <a
-              href="https://github.com/ShootMe/GPAK-Extractor"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-mew-accent hover:underline"
-            >
-              GPAK-Extractor
-            </a>{' '}
-            tool. Drag resources.gpak onto the exe to unpack it.
-          </li>
-          <li>
-            <span className="text-mew-text font-medium">
-              Copy your pack files
-            </span>{' '}
-            — from each ZIP, copy the audio/ folder into the extracted output:
-            <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono whitespace-pre-line">
-              {'audio/voices/YourPackName.gon\naudio/voices/YourPackName/*.wav'}
-            </code>
-          </li>
-          <li>
-            <span className="text-mew-text font-medium">
-              Register in catgen.gon
-            </span>{' '}
-            — open{' '}
-            <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">
-              data/catgen.gon
-            </code>{' '}
-            and find the{' '}
-            <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">
-              voice_sets {'{'}
-            </code>{' '}
-            section. Add a line for each pack:
-            <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono">
-              YourPackName 1
-            </code>
-          </li>
-          <li>
-            <span className="text-mew-text font-medium">Repack</span> — drag
-            the output folder back onto the GPAK-Extractor exe to create a new
-            gpak.
-          </li>
-          <li>
-            <span className="text-mew-text font-medium">
-              Replace the original
-            </span>{' '}
-            resources.gpak in your game folder with the repacked one.
-          </li>
-          <li>Launch the game. Your voice packs will be available.</li>
-        </ol>
-
-        <div className="mt-4 bg-amber-900/20 rounded-lg p-4 border border-amber-700/30">
-          <p className="text-amber-400 text-sm font-medium mb-1">Important</p>
-          <p className="text-mew-muted text-xs">
-            The install script saves a permanent vanilla baseline
-            (resources_vanilla.gpak) on first run. If a game update replaces
-            resources.gpak, delete the old resources_vanilla.gpak and re-run
-            to create a fresh baseline.
+        <div className="mt-4 bg-mew-accent/10 rounded-lg p-4 border border-mew-accent/30">
+          <p className="text-mew-accent text-sm font-medium mb-1">Mewtator Compatibility</p>
+          <p className="text-mew-muted text-xs leading-relaxed">
+            Each ZIP includes a <code className="font-mono">catgen.gon.patch</code> file. 
+            This tells Mewtator to register the new voice set in the game's category generator 
+            without you having to edit any game files manually.
           </p>
         </div>
       </section>

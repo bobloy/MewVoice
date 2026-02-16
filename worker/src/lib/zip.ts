@@ -3,7 +3,7 @@
  * Port of server/pack_builder.py to TypeScript.
  */
 import JSZip from 'jszip';
-import { generateVoiceGon, generateInstallInstructions } from './gon';
+import { generateVoiceGon, generateCatgenPatch } from './gon';
 
 export interface BuildMetadata {
   name: string;
@@ -30,8 +30,8 @@ export async function buildVoicePackZip(
   // metadata.json
   zip.file('metadata.json', JSON.stringify(metadata, null, 2));
 
-  // Install instructions
-  zip.file('INSTALL_INSTRUCTIONS.txt', generateInstallInstructions(packName));
+  // Mewtator patch
+  zip.file('data/catgen.gon.patch', generateCatgenPatch(packName));
 
   // Group files by action for GON generation
   const actionFiles: Record<string, string[]> = {};

@@ -1,0 +1,138 @@
+Mewgenics Mewtator Modding
+
+Core Concept
+Mewtator uses file layering instead of overwriting base game files. You do not replace original files. Instead, you create new files with special suffixes that modify or extend existing data safely.
+
+Never overwrite base files. Always use `.append`, `.merge`, or `.patch`.
+
+General Workflow
+
+1. Identify the game file you want to modify (example: swflist.txt, tilesets.txt).
+2. Create a new file with the same name plus a suffix:
+
+   * `.append`
+   * `.merge`
+   * `.patch`
+3. Place this new file inside your mod folder.
+4. Match the original file’s structure and formatting exactly.
+
+Suffix Behavior Rules
+
+.append (Add Content)
+Purpose: Adds new data to the end of an existing file or list.
+Use when:
+
+* Adding new SWFs
+* Adding new entries to lists
+* Extending content without altering existing entries
+
+Behavior:
+This acts like gluing your content onto the original file. Nothing is removed or replaced.
+
+Example pattern:
+
+```
+game [
+    yourfile.swf
+]
+```
+
+Important:
+For SWF loading, always append your SWF instead of overwriting the list so multiple art mods can stack.
+
+.merge (Change Specific Fields Safely)
+Purpose: Replaces only specific fields inside an existing entry.
+Use when:
+
+* Changing palette values
+* Tweaking stats
+* Editing simple existing properties
+
+Behavior:
+The engine finds the matching entry and updates only the fields you specify, leaving all other data untouched.
+
+Structure rule:
+
+```
+ID {
+    field value
+}
+```
+
+Example:
+
+```
+1 {
+    palette 5
+}
+```
+
+This changes only the palette of entry 1 and nothing else.
+
+.patch (Advanced / Complex Modifications)
+Purpose: Modify nested data, lists, or complex structures without overwriting full entries.
+Use when:
+
+* Appending to internal lists
+* Editing complex data blocks
+* Making surgical changes to structured data (GON-style files)
+
+Behavior:
+Allows field-level operations and list manipulation.
+
+Example:
+
+```
+1 {
+    palette 5
+    art_alts.append [
+        [Player PlayerRetro]
+    ]
+}
+```
+
+This updates the palette and adds a new art alternate while preserving all other data.
+
+Field-Level Operations Inside .patch
+You can apply modifiers directly to fields:
+
+* `.overwrite` → fully replace a value
+* `.append` → add to a list
+* `.merge` → merge subfields
+* `.add` → add to numeric values
+* `.multiply` → multiply numeric values
+
+Example:
+
+```
+damage.multiply 1.5
+```
+
+This increases damage by 50% without rewriting the entire entry.
+
+SWF Loading Rules (Critical)
+
+* Use `swflist.txt.append` to add new SWFs.
+* Maintain correct structure (example: `game [ ... ]`).
+* SWFs at the bottom of the load list have highest priority.
+* Always append, never overwrite, to ensure compatibility with other mods.
+
+Formatting Requirements
+
+* Always match the original file’s structure.
+* Use the correct entry ID blocks (e.g., `1 { ... }`).
+* Do not write loose values outside structured blocks.
+* Preserve brackets, spacing, and syntax style used by the base files.
+
+Decision Guide
+If adding new assets or entries → use `.append`
+If changing simple existing values → use `.merge`
+If modifying lists or complex/nested data → use `.patch`
+
+Safety Best Practices
+
+* Do not replace original files.
+* Keep edits minimal and targeted.
+* Prefer `.merge` for small tweaks.
+* Use `.patch` only when list or nested edits are required.
+* Append SWFs instead of overwriting load lists to maintain mod stacking compatibility.
