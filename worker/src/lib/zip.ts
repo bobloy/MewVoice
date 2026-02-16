@@ -27,11 +27,18 @@ export async function buildVoicePackZip(
 ): Promise<ArrayBuffer> {
   const zip = new JSZip();
 
-  // metadata.json
-  zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+  // Mewtator metadata and pack metadata
+  const mewtatorMeta = {
+    name: 'MewVoice Master Mod',
+    description: 'Master mod for custom MewVoice packs',
+    author: 'MewVoice Community',
+    version: '1.0.0',
+  };
+  zip.file('metadata.json', JSON.stringify(mewtatorMeta, null, 2));
+  zip.file(`metadata_${packName}.json`, JSON.stringify(metadata, null, 2));
 
   // Mewtator patch
-  zip.file('data/catgen.gon.patch', generateCatgenPatch(packName));
+  zip.file(`data/catgen.gon.${packName}.patch`, generateCatgenPatch(packName));
 
   // Group files by action for GON generation
   const actionFiles: Record<string, string[]> = {};

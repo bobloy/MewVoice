@@ -200,22 +200,22 @@ export function InstructionsPage() {
             get the ZIP files for the voices you want to use.
           </li>
           <li>
-            <span className="text-mew-text font-medium">Extract to mods folder</span> —
-            unzip each pack into a new subfolder in your Mewgenics <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">mods/</code> directory.
+            <span className="text-mew-text font-medium">Extract to MewVoice folder</span> —
+            unzip each pack into the <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">mods/MewVoice/</code> directory.
             <div className="mt-2 pl-6 border-l-2 border-mew-highlight/20">
-              <p className="text-xs">Your mods folder should look like this:</p>
+              <p className="text-xs">All your voices live in one master mod folder:</p>
               <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono whitespace-pre">
-                Mewgenics/mods/{"\n"}
-                ├── MyCoolVoice/{"\n"}
-                │   ├── audio/{"\n"}
-                │   │   └── voices/{"\n"}
-                │   │       ├── MyCoolVoice.gon{"\n"}
-                │   │       └── MyCoolVoice/{"\n"}
-                │   │           └── ...wav{"\n"}
-                │   └── data/{"\n"}
-                │       └── catgen.gon.patch{"\n"}
-                └── AnotherVoice/{"\n"}
-                {"    "}└── ...
+                Mewgenics/mods/MewVoice/{"\n"}
+                ├── metadata.json{"\n"}
+                ├── audio/{"\n"}
+                │   └── voices/{"\n"}
+                │       ├── Pack1.gon{"\n"}
+                │       ├── Pack1/{"\n"}
+                │       ├── Pack2.gon{"\n"}
+                │       └── Pack2/{"\n"}
+                └── data/{"\n"}
+                {"    "}├── catgen.gon.Pack1.patch{"\n"}
+                {"    "}└── catgen.gon.Pack2.patch
               </code>
             </div>
           </li>
@@ -226,11 +226,10 @@ export function InstructionsPage() {
         </ol>
 
         <div className="mt-4 bg-mew-accent/10 rounded-lg p-4 border border-mew-accent/30">
-          <p className="text-mew-accent text-sm font-medium mb-1">Mewtator Compatibility</p>
+          <p className="text-mew-accent text-sm font-medium mb-1">Master Mod Strategy</p>
           <p className="text-mew-muted text-xs leading-relaxed">
-            Each ZIP includes a <code className="font-mono">catgen.gon.patch</code> file. 
-            This tells Mewtator to register the new voice set in the game's category generator 
-            without you having to edit any game files manually.
+            By extracting all packs into the same <code className="font-mono">MewVoice</code> folder, they share a single mod entry in the loader while remaining fully compatible. 
+            Each pack includes its own unique <code className="font-mono">catgen.gon.packname.patch</code> file to avoid conflicts.
           </p>
         </div>
       </section>

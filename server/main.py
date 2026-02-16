@@ -164,13 +164,22 @@ async def build_voicepack(
             converted_files[action].append(wav_name)
             src_path.unlink(missing_ok=True)
 
+    # Mewtator metadata
+    mewtator_meta = {
+        "name": "MewVoice Master Mod",
+        "description": "Master mod for custom MewVoice packs",
+        "author": "MewVoice Community",
+        "version": "1.0.0"
+    }
+    (build_dir / "metadata.json").write_text(json.dumps(mewtator_meta, indent=2))
+
     metadata = {
         "name": name, "author": author, "gender": gender, "description": description,
         "pack_name": pack_name, "build_id": build_id,
         "clip_counts": {a: len(f) for a,f in converted_files.items()},
         "created_at": datetime.utcnow().isoformat(),
     }
-    (build_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
+    (build_dir / f"metadata_{pack_name}.json").write_text(json.dumps(metadata, indent=2))
 
     gon_content = generate_voice_gon(pack_name, f"voices/{pack_name}",
         converted_files, is_female=(gender=="female"))
@@ -178,7 +187,7 @@ async def build_voicepack(
 
     data_dir = build_dir / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
-    (data_dir / "catgen.gon.patch").write_text(generate_catgen_patch(pack_name))
+    (data_dir / f"catgen.gon.{pack_name}.patch").write_text(generate_catgen_patch(pack_name))
 
     return {"id": build_id, "packName": pack_name, "downloadUrl": f"/api/voicepacks/{build_id}/download"}
 
@@ -210,7 +219,7 @@ async def publish_voicepack(build_id: str, request: Request):
     if lib_path.exists(): shutil.rmtree(lib_path)
     shutil.copytree(build_dir, lib_path)
 
-    meta_file = lib_path / "metadata.json"
+    meta_file = lib_path / f"metadata_{build_id}.json"
     meta = json.loads(meta_file.read_text()) if meta_file.exists() else {}
     entry = {
         "id": build_id,
