@@ -4,7 +4,7 @@
  * Client-side we just do basic validation.
  */
 
-import { AUDIO_REQUIREMENTS } from '@/types/voicepack';
+import { AUDIO_REQUIREMENTS, ACTION_RECOMMENDED_CLIPS, VoiceAction } from '@/types/voicepack';
 import { encodeWav } from '@/lib/audioConverter';
 
 export async function getAudioDuration(blob: Blob): Promise<number> {
@@ -66,18 +66,30 @@ export async function getAudioDuration(blob: Blob): Promise<number> {
 
 export function validateAudioClip(
   blob: Blob,
-  duration: number
-): { valid: boolean; errors: string[] } {
+  duration: number,
+  action?: VoiceAction
+): { valid: boolean; errors: string[]; warnings: string[] } {
   const errors: string[] = [];
+  const warnings: string[] = [];
 
   if (!isFinite(duration) || duration <= 0) {
     // Duration unknown — skip duration checks, server will validate
-    return { valid: true, errors: [] };
+    return { valid: true, errors: [], warnings: [] };
   }
+
+  // Warning threshold is either based on game stats for the specific action,
+  // or the global fallback.
+  const warningThreshold = action 
+    ? ACTION_RECOMMENDED_CLIPS[action].durationMax 
+    : AUDIO_REQUIREMENTS.warningDurationSec;
 
   if (duration > AUDIO_REQUIREMENTS.maxDurationSec) {
     errors.push(
       `Clip is ${duration.toFixed(1)}s — max is ${AUDIO_REQUIREMENTS.maxDurationSec}s`
+    );
+  } else if (duration > warningThreshold) {
+    warnings.push(
+      `Clip is ${duration.toFixed(1)}s — game max for ${action || 'this type'} is ${warningThreshold.toFixed(1)}s`
     );
   }
 
@@ -91,7 +103,7 @@ export function validateAudioClip(
     errors.push(`File too large (${sizeMB.toFixed(1)}MB)`);
   }
 
-  return { valid: errors.length === 0, errors };
+  return { valid: errors.length === 0, errors, warnings };
 }
 
 export function generateClipId(): string {

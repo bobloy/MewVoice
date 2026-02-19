@@ -9,10 +9,10 @@
 
 const TARGET_SAMPLE_RATE = 44100;
 const TARGET_CHANNELS = 1;
-const TARGET_DBFS = -20;
+const TARGET_DBFS = -1.0; // Boosted to -1.0dBFS peak for game-ready loudness
 const SILENCE_THRESH_DBFS = -45;
 const MIN_DURATION = 0.05;
-const MAX_DURATION = 10;
+const MAX_DURATION = 8;
 
 export interface ConversionResult {
   wavBlob: Blob;
@@ -23,11 +23,16 @@ export interface ConversionResult {
 /**
  * Convert an audio Blob to game-ready mono 16-bit 44100 Hz WAV.
  * Performs resampling, mono mixdown, normalization, and silence trimming.
+ * 
+ * @param blob The input audio blob
+ * @param volumeAdjustmentDb Optional manual volume adjustment in dB. 
+ *                           Applied by shifting the normalization target.
+ *                           (e.g. +5dB means normalize to -15dBFS instead of -20dBFS)
  */
-export async function convertToGameWav(blob: Blob): Promise<ConversionResult> {
+export async function convertToGameWav(blob: Blob, volumeAdjustmentDb: number = 0): Promise<ConversionResult> {
   const arrayBuffer = await blob.arrayBuffer();
 
-  // Decode the source audio into an AudioBuffer using any codec the browser supports
+  // Decode transformation
   const audioCtx = new AudioContext({ sampleRate: TARGET_SAMPLE_RATE });
   let decoded: AudioBuffer;
   try {
@@ -45,59 +50,71 @@ export async function convertToGameWav(blob: Blob): Promise<ConversionResult> {
     throw new Error(`Audio too long (${originalDuration.toFixed(2)}s). Maximum is ${MAX_DURATION}s.`);
   }
 
-  // Resample to target sample rate and mix down to mono using OfflineAudioContext
+  // Resample & Mix Down
   const offlineCtx = new OfflineAudioContext(
     TARGET_CHANNELS,
     Math.ceil(decoded.duration * TARGET_SAMPLE_RATE),
     TARGET_SAMPLE_RATE,
   );
+
   const source = offlineCtx.createBufferSource();
   source.buffer = decoded;
   source.connect(offlineCtx.destination);
   source.start(0);
+
   const rendered = await offlineCtx.startRendering();
 
-  // Get the mono channel data (float32 samples, -1 to 1)
+  // Get samples
   let samples = rendered.getChannelData(0);
 
-  // Normalize to target dBFS
-  samples = normalize(samples, TARGET_DBFS);
+  // 1. Normalize based on PEAK + Adjustment
+  // Base target is -20dB. Adjustment shifts this up or down.
+  const targetPeakDbfs = TARGET_DBFS + volumeAdjustmentDb;
 
-  // Trim silence
-  samples = trimSilence(samples, SILENCE_THRESH_DBFS);
+  // Hard cap to prevent clipping (never go above -0.5dB even if user asks for +100dB)
+  const MAX_SAFE_PEAK = -0.5;
+  const effectiveTarget = Math.min(targetPeakDbfs, MAX_SAFE_PEAK);
+
+  samples = normalizeToPeak(samples, effectiveTarget);
+
+  // 2. No automatic silence trimming
+  // samples = trimSilence(samples, SILENCE_THRESH_DBFS); <-- REMOVED per user request
 
   const outputDuration = samples.length / TARGET_SAMPLE_RATE;
 
-  // Encode as 16-bit PCM WAV
+  // Encode
   const wavBlob = encodeWav(samples, TARGET_SAMPLE_RATE);
 
   return { wavBlob, originalDuration, outputDuration };
 }
 
 /**
- * Normalize audio samples to a target dBFS level.
+ * Normalize audio samples to a target Peak dBFS level.
  */
-function normalize(samples: Float32Array, targetDbfs: number): Float32Array {
-  // Compute RMS
-  let sumSq = 0;
+function normalizeToPeak(samples: Float32Array, targetDbfs: number): Float32Array {
+  // Find current peak
+  let maxVal = 0;
   for (let i = 0; i < samples.length; i++) {
-    sumSq += samples[i] * samples[i];
+    const abs = Math.abs(samples[i]);
+    if (abs > maxVal) maxVal = abs;
   }
-  const rms = Math.sqrt(sumSq / samples.length);
 
-  if (rms === 0) return samples; // silence, nothing to normalize
+  if (maxVal === 0) return samples; // Silence
 
-  const currentDbfs = 20 * Math.log10(rms);
+  const currentDbfs = 20 * Math.log10(maxVal);
   const gainDb = targetDbfs - currentDbfs;
   const gainLinear = Math.pow(10, gainDb / 20);
 
-  const normalized = new Float32Array(samples.length);
+  // Apply gain
   for (let i = 0; i < samples.length; i++) {
-    // Clamp to [-1, 1] after gain
-    normalized[i] = Math.max(-1, Math.min(1, samples[i] * gainLinear));
+    // Clamp to [-1, 1] essentially acts as a hard limiter if calculation was off, 
+    // but normalizeToPeak shouldn't overshoot.
+    samples[i] = Math.max(-1, Math.min(1, samples[i] * gainLinear));
   }
-  return normalized;
+  return samples;
 }
+
+
 
 /**
  * Trim leading and trailing silence from audio samples.
@@ -179,6 +196,7 @@ export function encodeWav(samples: Float32Array, sampleRate: number): Blob {
   let offset = 44;
   for (let i = 0; i < samples.length; i++) {
     const s = Math.max(-1, Math.min(1, samples[i]));
+    // Dithering could be added here for extra quality, but rounding is ok for now
     const val = s < 0 ? s * 0x8000 : s * 0x7FFF;
     view.setInt16(offset, val, true);
     offset += 2;

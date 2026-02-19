@@ -83,6 +83,27 @@ export function PackBuilder() {
     }));
   }, []);
 
+  const handleMoveClip = useCallback((clipId: string, fromAction: VoiceAction, toAction: VoiceAction) => {
+    setPack((prev) => {
+      const clipToMove = prev.clips[fromAction].find(c => c.id === clipId);
+      if (!clipToMove) return prev;
+
+      // Update action in clip object
+      const movedClip = { ...clipToMove, action: toAction };
+
+      return {
+        ...prev,
+        clips: {
+          ...prev.clips,
+          [fromAction]: prev.clips[fromAction].filter(c => c.id !== clipId),
+          [toAction]: [...prev.clips[toAction], movedClip],
+        }
+      };
+    });
+  }, []);
+
+
+
   const handleBuild = async () => {
     if (!canBuild) return;
 
@@ -222,6 +243,7 @@ export function PackBuilder() {
             </div>
           </div>
 
+
           {/* Progress bar */}
           <div className="bg-mew-surface rounded-xl p-4 mb-6 border border-mew-highlight/30">
             <div className="flex justify-between text-sm mb-2">
@@ -251,6 +273,7 @@ export function PackBuilder() {
               onAddClip={handleAddClip}
               onRemoveClip={(clipId) => handleRemoveClip(action, clipId)}
               onUpdateClip={handleUpdateClip}
+              onMoveClip={(clipId, toAction) => handleMoveClip(clipId, action, toAction)}
             />
           ))}
         </div>

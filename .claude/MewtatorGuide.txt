@@ -1,87 +1,68 @@
-Mewgenics Mewtator Modding
+Mewgenics Mewtator Modding Guide
 
-Core Concept
-Mewtator uses file layering instead of overwriting base game files. You do not replace original files. Instead, you create new files with special suffixes that modify or extend existing data safely.
+# Core Concept
+Mewtator is a mod launcher that injects custom arguments (e.g., `-modpaths C:\path\to\mod`) into the game. It does NOT modify or unpack the base game resources (`resources.gpak`). The game engine itself handles loading `.patch`, `.append`, and `.merge` files from the specified mod paths.
 
-Never overwrite base files. Always use `.append`, `.merge`, or `.patch`.
+# General Workflow
+1. Create your mod structure in a folder (e.g., `Mewtator/mods/MyMod`).
+2. Add a `description.json` file to identify your mod (see format below).
+3. Place your modified files in the mod folder, mirroring the game's directory structure.
+4. Use the appropriate suffix for your changes:
+   - `.append` (Add new content to lists)
+   - `.merge` (Update specific fields in existing entries)
+   - `.patch` (Complex nested data modifications)
 
-General Workflow
+# Merging Voice Packs
+When multiple voice packs are installed, they all attempt to modify `catgen.gon` to register themselves. To prevent conflicts, we use a merged patch file.
 
-1. Identify the game file you want to modify (example: swflist.txt, tilesets.txt).
-2. Create a new file with the same name plus a suffix:
+## Instructions for Users
+1. Extract voice pack mods into `Mewtator/mods/MewVoice/`.
+   - Each pack should be in its own subfolder (e.g., `MewVoice/CoolCatVoice/`).
+2. Run the `merge_voicepacks.bat` script located in the `MewVoice` folder.
+3. This script scans all subfolders for `description.json`, extracts the `title`, and generates a single `catgen.gon.patch` file that registers all packs.
 
-   * `.append`
-   * `.merge`
-   * `.patch`
-3. Place this new file inside your mod folder.
-4. Match the original file’s structure and formatting exactly.
+## Instructions for Modders (description.json)
+Every voice pack MUST include a `description.json` file in its root folder.
 
-Suffix Behavior Rules
+Format:
+```json
+{
+	"title": "unique_pack_id",
+	"description": "A brief description of your voice pack.",
+	"author": "YourName",
+	"version": "1.0.0"
+}
+```
+*Note: The `title` field is used as the internal ID for your voice set. It must be unique and contain no spaces.*
 
-.append (Add Content)
-Purpose: Adds new data to the end of an existing file or list.
-Use when:
+# Suffix Behavior Rules
 
-* Adding new SWFs
-* Adding new entries to lists
-* Extending content without altering existing entries
-
-Behavior:
-This acts like gluing your content onto the original file. Nothing is removed or replaced.
-
-Example pattern:
-
+## .append (Add Content)
+**Purpose**: Adds new data to the end of an existing file or list.
+**Use when**: Adding new SWFs or extending lists.
+**Example**:
 ```
 game [
     yourfile.swf
 ]
 ```
+*Tip: Always append SWFs instead of overwriting the list to allow multiple mods to work together.*
 
-Important:
-For SWF loading, always append your SWF instead of overwriting the list so multiple art mods can stack.
-
-.merge (Change Specific Fields Safely)
-Purpose: Replaces only specific fields inside an existing entry.
-Use when:
-
-* Changing palette values
-* Tweaking stats
-* Editing simple existing properties
-
-Behavior:
-The engine finds the matching entry and updates only the fields you specify, leaving all other data untouched.
-
-Structure rule:
-
-```
-ID {
-    field value
-}
-```
-
-Example:
-
+## .merge (Change Specific Fields)
+**Purpose**: Updates specific fields in an existing entry without touching other data.
+**Use when**: Tweaking stats or changing palettes.
+**Structure**:
 ```
 1 {
     palette 5
 }
 ```
+*This changes only the palette of entry 1.*
 
-This changes only the palette of entry 1 and nothing else.
-
-.patch (Advanced / Complex Modifications)
-Purpose: Modify nested data, lists, or complex structures without overwriting full entries.
-Use when:
-
-* Appending to internal lists
-* Editing complex data blocks
-* Making surgical changes to structured data (GON-style files)
-
-Behavior:
-Allows field-level operations and list manipulation.
-
-Example:
-
+## .patch (Complex Modifications)
+**Purpose**: Modify nested data or lists within an entry.
+**Use when**: adding to internal lists (like `art_alts`) or editing complex structures.
+**Example**:
 ```
 1 {
     palette 5
@@ -90,49 +71,13 @@ Example:
     ]
 }
 ```
+**Modifiers**:
+* `.overwrite`
+* `.append`
+* `.merge`
+* `.add` (numeric)
+* `.multiply` (numeric)
 
-This updates the palette and adds a new art alternate while preserving all other data.
-
-Field-Level Operations Inside .patch
-You can apply modifiers directly to fields:
-
-* `.overwrite` → fully replace a value
-* `.append` → add to a list
-* `.merge` → merge subfields
-* `.add` → add to numeric values
-* `.multiply` → multiply numeric values
-
-Example:
-
-```
-damage.multiply 1.5
-```
-
-This increases damage by 50% without rewriting the entire entry.
-
-SWF Loading Rules (Critical)
-
-* Use `swflist.txt.append` to add new SWFs.
-* Maintain correct structure (example: `game [ ... ]`).
-* SWFs at the bottom of the load list have highest priority.
-* Always append, never overwrite, to ensure compatibility with other mods.
-
-Formatting Requirements
-
-* Always match the original file’s structure.
-* Use the correct entry ID blocks (e.g., `1 { ... }`).
-* Do not write loose values outside structured blocks.
-* Preserve brackets, spacing, and syntax style used by the base files.
-
-Decision Guide
-If adding new assets or entries → use `.append`
-If changing simple existing values → use `.merge`
-If modifying lists or complex/nested data → use `.patch`
-
-Safety Best Practices
-
-* Do not replace original files.
-* Keep edits minimal and targeted.
-* Prefer `.merge` for small tweaks.
-* Use `.patch` only when list or nested edits are required.
-* Append SWFs instead of overwriting load lists to maintain mod stacking compatibility.
+# Audio Upload Improvements
+- Max audio length increased to 8 seconds.
+- Volume adjustment added to the upload/trim tool.
