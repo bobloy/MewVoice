@@ -210,7 +210,7 @@ export function InstructionsPage() {
             <span className="text-mew-text font-medium">Download MewVoice Desktop</span> —
             grab the latest release from{' '}
             <a
-              href="https://github.com/akendall/MewgenicsVoicePack/releases"
+              href="https://github.com/bobloy/MewVoice/releases"
               target="_blank"
               rel="noopener noreferrer"
               className="text-mew-accent hover:underline"
