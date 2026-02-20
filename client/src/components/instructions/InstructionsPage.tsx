@@ -169,6 +169,13 @@ export function InstructionsPage() {
           <li>
             Gender limits which cats can use the pack. Male voices go to male cats, female to female.
           </li>
+          <li>
+            <span className="text-mew-text font-medium">Sing clips</span> are
+            not a cat singing a melody — they're a very short meow the game
+            repeats rapidly at different pitches to emulate singing. Keep them
+            under ~0.7s. If you skip Sing, the game uses your first Normal clip
+            as a fallback.
+          </li>
         </ul>
       </section>
 

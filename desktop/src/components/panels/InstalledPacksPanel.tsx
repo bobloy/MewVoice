@@ -133,9 +133,13 @@ function PackRow({
   onSetFrequency: (freq: number) => void;
   onUninstall: () => void;
 }) {
+  const totalClips = pack.clipCounts
+    ? Object.values(pack.clipCounts).reduce((sum, n) => sum + n, 0)
+    : 0;
+
   return (
     <div
-      className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${
+      className={`flex items-start gap-4 p-4 rounded-lg border transition-colors ${
         pack.isEnabled
           ? 'bg-mew-surface border-mew-highlight/40'
           : 'bg-mew-surface/50 border-mew-highlight/20 opacity-60'
@@ -144,7 +148,7 @@ function PackRow({
       {/* Toggle */}
       <button
         onClick={onToggle}
-        className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 ${
+        className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 mt-1 ${
           pack.isEnabled ? 'bg-mew-accent' : 'bg-mew-highlight'
         }`}
       >
@@ -168,19 +172,26 @@ function PackRow({
             </span>
           )}
         </div>
-        <p className="text-xs text-mew-muted truncate">
-          {pack.author && `by ${pack.author} · `}
-          {pack.folderName}
-        </p>
+        {pack.author && (
+          <p className="text-sm text-mew-muted mt-0.5">
+            by {pack.author}
+          </p>
+        )}
         {pack.description && (
-          <p className="text-xs text-mew-muted/50 truncate mt-0.5">
+          <p className="text-xs text-mew-muted/70 mt-1 line-clamp-2">
             {pack.description}
           </p>
         )}
+        <div className="flex items-center gap-3 mt-1.5 text-xs text-mew-muted/60">
+          {totalClips > 0 && (
+            <span>{totalClips} clip{totalClips !== 1 ? 's' : ''}</span>
+          )}
+          <span className="text-mew-muted/40">{pack.folderName}</span>
+        </div>
       </div>
 
       {/* Frequency */}
-      <div className="flex items-center gap-1.5 flex-shrink-0">
+      <div className="flex items-center gap-1.5 flex-shrink-0 mt-1">
         <label className="text-xs text-mew-muted">Weight:</label>
         <input
           type="number"
@@ -201,7 +212,7 @@ function PackRow({
               onUninstall();
             }
           }}
-          className="text-red-400/60 hover:text-red-400 text-sm px-1 flex-shrink-0"
+          className="text-red-400/60 hover:text-red-400 text-sm px-1 flex-shrink-0 mt-1"
           title="Uninstall pack"
         >
           Remove
