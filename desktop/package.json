@@ -8,6 +8,7 @@
     "dev:web": "vite",
     "build": "tauri build",
     "build:web": "tsc -b && vite build",
+    "tauri": "tauri",
     "lint": "eslint .",
     "preview": "vite preview"
   },
