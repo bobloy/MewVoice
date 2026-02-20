@@ -7,9 +7,6 @@ client/dist/
 worker/dist/
 
 # Python
-server/__pycache__/
-server/*.pyc
-server/venv/
 .venv/
 
 # Environment and configuration files
@@ -18,7 +15,6 @@ server/venv/
 worker/.dev.vars
 
 # Data and temporary files
-server/data/
 _*.txt
 unpacked/
 Mewtator-1-0-1-0-1771020481/

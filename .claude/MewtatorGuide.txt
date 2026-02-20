@@ -12,28 +12,38 @@ Mewtator is a mod launcher that injects custom arguments (e.g., `-modpaths C:\pa
    - `.merge` (Update specific fields in existing entries)
    - `.patch` (Complex nested data modifications)
 
-# Merging Voice Packs
-When multiple voice packs are installed, they all attempt to modify `catgen.gon` to register themselves. To prevent conflicts, we use a merged patch file.
+# Voice Pack Installation (MewVoice Desktop)
+Voice packs are managed by the MewVoice Desktop app (Tauri). It handles all
+patching automatically — users never need to touch the game files manually.
 
-## Instructions for Users
-1. Extract voice pack mods into `Mewtator/mods/MewVoice/`.
-   - Each pack should be in its own subfolder (e.g., `MewVoice/CoolCatVoice/`).
-2. Run the `merge_voicepacks.bat` script located in the `MewVoice` folder.
-3. This script scans all subfolders for `description.json`, extracts the `title`, and generates a single `catgen.gon.patch` file that registers all packs.
+## How it works
+1. All voice packs install into a single shared mod folder: `mods/MewVoice/`
+2. Each pack's audio lives in `MewVoice/audio/voices/<packname>/`
+3. Each pack has a `.gon` voice definition at `MewVoice/audio/voices/<packname>.gon`
+4. The desktop app writes ONE merged patch file: `MewVoice/data/catgen.gon.patch`
+   - This file registers all enabled custom packs and their spawn weights
+   - It uses `voice_sets.append { ... }` syntax so base game voices still work
+   - Muted base packs are included with weight 0 to suppress them
 
-## Instructions for Modders (description.json)
-Every voice pack MUST include a `description.json` file in its root folder.
-
-Format:
-```json
-{
-	"title": "unique_pack_id",
-	"description": "A brief description of your voice pack.",
-	"author": "YourName",
-	"version": "1.0.0"
+## catgen.gon.patch format
+voice_sets.append {
+    base_cat 0            <- weight 0 = muted
+    custom_voice_1 1      <- weight 1 = normal spawn rate
+    fancy_meow 3          <- weight 3 = 3x more likely than weight-1 packs
 }
-```
-*Note: The `title` field is used as the internal ID for your voice set. It must be unique and contain no spaces.*
+
+## description.json format (Mewtator requirement)
+Every mod folder must have a description.json:
+{
+    "name": "MewVoice Master Mod",
+    "description": "Merged voice pack registrations from MewVoice Desktop",
+    "author": "MewVoice",
+    "version": "1.0.0"
+}
+
+Note: The voice set ID (used in catgen.gon.patch) comes from the pack's folder
+name, NOT the description.json name field. The description.json exists only to
+satisfy Mewtator's mod discovery requirements.
 
 # Suffix Behavior Rules
 

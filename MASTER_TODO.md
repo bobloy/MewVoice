@@ -23,7 +23,7 @@ Goal: **be the authority for Mewgenics voice pack mods** — including **enablin
 ## 1) Current Architecture Snapshot (for context)
 - `client/`: React + TypeScript + Vite UI (web app).
 - `worker/`: Cloudflare Worker API (TypeScript/Hono) with R2 + D1 for hosting community library/builds.
-- `server/`: legacy Python tooling (kept as optional/legacy path).
+- `desktop/`: Tauri desktop app for local pack installation and management.
 - `unpacked/`: extracted game assets used for reference/research (not a shipping dependency).
 
 **Reasoning:** Agents need to know what is “product code” vs “reference materials” to avoid turning the game dump into an accidental dependency.

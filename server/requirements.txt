@@ -1,8 +1,0 @@
-fastapi
-uvicorn[standard]
-python-multipart
-pydub
-aiofiles
-audioop-lts
-PyJWT
-httpx
