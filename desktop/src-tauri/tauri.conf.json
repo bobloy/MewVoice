@@ -27,6 +27,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -35,5 +36,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/Mewgenics/MewVoice/releases/latest"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERGRTU5OEI4NUZCMENEODMKUldTRHpiQmZ1SmpsMzZ3MkVNR25KOStVUWZ5c3NnSG16M3djV253YXArdVNjM2ZBZ29taW1DQjYK"
+    }
   }
 }
