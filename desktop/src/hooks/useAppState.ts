@@ -81,7 +81,7 @@ export function useAppState() {
     setState((s) => ({
       ...s,
       packs: s.packs.map((p) =>
-        p.id === packId ? { ...p, frequency: Math.max(1, frequency) } : p,
+        p.id === packId ? { ...p, frequency: Math.max(0, frequency) } : p,
       ),
     }));
   }, []);

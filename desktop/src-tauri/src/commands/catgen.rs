@@ -21,7 +21,7 @@ pub fn write_voice_patch(mod_root: String, content: String) -> Result<(), String
     let patch_path = data_dir.join("catgen.gon.patch");
     let temp_path = data_dir.join("catgen.gon.patch.tmp");
 
-    // Also ensure MewVoice/metadata.json exists (Mewtator needs this)
+    // Also ensure MewVoice/description.json exists (Mewtator needs this)
     ensure_mod_metadata(&PathBuf::from(&mod_root).join("MewVoice"))?;
 
     // Write to temp file first
@@ -36,9 +36,9 @@ pub fn write_voice_patch(mod_root: String, content: String) -> Result<(), String
     Ok(())
 }
 
-/// Ensure the MewVoice mod has a valid metadata.json for Mewtator.
+/// Ensure the MewVoice mod has a valid description.json for Mewtator.
 fn ensure_mod_metadata(mewvoice_dir: &PathBuf) -> Result<(), String> {
-    let meta_path = mewvoice_dir.join("metadata.json");
+    let meta_path = mewvoice_dir.join("description.json");
     if !meta_path.exists() {
         let metadata = serde_json::json!({
             "name": "MewVoice Master Mod",
@@ -47,7 +47,7 @@ fn ensure_mod_metadata(mewvoice_dir: &PathBuf) -> Result<(), String> {
             "version": "1.0.0"
         });
         fs::write(&meta_path, serde_json::to_string_pretty(&metadata).unwrap())
-            .map_err(|e| format!("Failed to write metadata.json: {e}"))?;
+            .map_err(|e| format!("Failed to write description.json: {e}"))?;
     }
     Ok(())
 }

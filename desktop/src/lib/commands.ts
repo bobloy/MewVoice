@@ -32,11 +32,6 @@ export async function saveState(state: AppState): Promise<void> {
 
 // ── Path detection ──
 
-export async function detectMewtatorPath(): Promise<string | null> {
-  if (!isTauri()) return null;
-  return tauriInvoke<string | null>('detect_mewtator_path');
-}
-
 export async function pickFolder(): Promise<string | null> {
   if (!isTauri()) {
     // In browser mode, prompt for a path string

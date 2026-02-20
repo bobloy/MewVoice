@@ -33,7 +33,7 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
         let name = entry.name().to_string();
 
         // Read metadata files
-        if name == "metadata.json" || name.starts_with("metadata_") && name.ends_with(".json") {
+        if name == "description.json" || name.starts_with("metadata_") && name.ends_with(".json") {
             let mut content = String::new();
             entry.read_to_string(&mut content).map_err(|e| e.to_string())?;
 

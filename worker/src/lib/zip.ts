@@ -34,7 +34,7 @@ export async function buildVoicePackZip(
     author: 'MewVoice Community',
     version: '1.0.0',
   };
-  zip.file('metadata.json', JSON.stringify(mewtatorMeta, null, 2));
+  zip.file('description.json', JSON.stringify(mewtatorMeta, null, 2));
   zip.file(`metadata_${packName}.json`, JSON.stringify(metadata, null, 2));
 
   // Mewtator patch
