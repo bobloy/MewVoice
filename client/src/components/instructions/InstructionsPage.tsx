@@ -216,6 +216,15 @@ export function InstructionsPage() {
               className="text-mew-accent hover:underline"
             >
               GitHub Releases
+            </a>{' '}
+            or{' '}
+            <a
+              href="https://www.nexusmods.com/mewgenics/mods/76"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-mew-accent hover:underline"
+            >
+              NexusMods
             </a>
             .
           </li>
