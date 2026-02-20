@@ -32,6 +32,8 @@ export interface AppState {
   autoSync: boolean;
   /** SHA-256 hash of last written patch file for dirty detection */
   lastPatchHash: string | null;
+  /** IDs of base game voice packs that are muted (weight set to 0) */
+  mutedBasePacks: string[];
 }
 
 /** Create a fresh default state */
@@ -41,5 +43,6 @@ export function createDefaultState(): AppState {
     mewtatorModRoot: null,
     autoSync: false,
     lastPatchHash: null,
+    mutedBasePacks: [],
   };
 }

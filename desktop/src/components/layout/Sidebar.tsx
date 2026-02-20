@@ -1,4 +1,4 @@
-type Panel = 'packs' | 'registration' | 'settings';
+type Panel = 'packs' | 'base-packs' | 'registration' | 'settings';
 
 interface SidebarProps {
   activePanel: Panel;
@@ -8,6 +8,7 @@ interface SidebarProps {
 
 const NAV_ITEMS: { id: Panel; label: string; icon: string }[] = [
   { id: 'packs', label: 'Installed Packs', icon: '\u{1F4E6}' },
+  { id: 'base-packs', label: 'Base Game Voices', icon: '\u{1F3AE}' },
   { id: 'registration', label: 'Voice Patch', icon: '\u{1F3AF}' },
   { id: 'settings', label: 'Settings', icon: '\u{2699}\u{FE0F}' },
 ];

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Shell from '@/components/layout/Shell';
 import type { Panel } from '@/components/layout/Sidebar';
 import InstalledPacksPanel from '@/components/panels/InstalledPacksPanel';
+import BasePacksPanel from '@/components/panels/BasePacksPanel';
 import VoiceRegistrationPanel from '@/components/panels/VoiceRegistrationPanel';
 import SettingsPanel from '@/components/panels/SettingsPanel';
 import { useAppState } from '@/hooks/useAppState';
@@ -9,6 +10,9 @@ import { useAppState } from '@/hooks/useAppState';
 function App() {
   const [activePanel, setActivePanel] = useState<Panel>('packs');
   const app = useAppState();
+
+  // Don't show dirty indicator when auto-sync will handle it
+  const showDirty = app.patchDirty && !app.state.autoSync;
 
   // Auto-sync: regenerate patch whenever packs change (if enabled)
   useEffect(() => {
@@ -38,7 +42,7 @@ function App() {
     <Shell
       activePanel={activePanel}
       onNavigate={setActivePanel}
-      patchDirty={app.patchDirty}
+      patchDirty={showDirty}
       error={app.error}
       onClearError={app.clearError}
     >
@@ -51,14 +55,21 @@ function App() {
           onImport={app.importZip}
           onUninstall={app.uninstallPack}
           onScan={app.scanPacks}
-          patchDirty={app.patchDirty}
+          patchDirty={showDirty}
+        />
+      )}
+      {activePanel === 'base-packs' && (
+        <BasePacksPanel
+          mutedBasePacks={app.state.mutedBasePacks}
+          onToggleMute={app.toggleMuteBasePack}
         />
       )}
       {activePanel === 'registration' && (
         <VoiceRegistrationPanel
           packs={app.state.packs}
+          mutedBasePacks={app.state.mutedBasePacks}
           modRoot={app.state.mewtatorModRoot}
-          patchDirty={app.patchDirty}
+          patchDirty={showDirty}
           onRegenerate={app.regeneratePatch}
         />
       )}

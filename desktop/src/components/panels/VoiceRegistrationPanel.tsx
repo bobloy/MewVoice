@@ -4,6 +4,7 @@ import { buildVoicePatch, computeSpawnDistribution } from '@/lib/patchBuilder';
 
 interface VoiceRegistrationPanelProps {
   packs: InstalledVoicePack[];
+  mutedBasePacks: string[];
   modRoot: string | null;
   patchDirty: boolean;
   onRegenerate: () => void;
@@ -11,12 +12,13 @@ interface VoiceRegistrationPanelProps {
 
 export default function VoiceRegistrationPanel({
   packs,
+  mutedBasePacks,
   modRoot,
   patchDirty,
   onRegenerate,
 }: VoiceRegistrationPanelProps) {
   const enabledPacks = packs.filter((p) => p.isEnabled);
-  const patchContent = useMemo(() => buildVoicePatch(packs), [packs]);
+  const patchContent = useMemo(() => buildVoicePatch(packs, mutedBasePacks), [packs, mutedBasePacks]);
   const distribution = useMemo(() => computeSpawnDistribution(packs), [packs]);
 
   if (!modRoot) {

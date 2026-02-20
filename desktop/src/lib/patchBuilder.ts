@@ -1,32 +1,44 @@
 import type { InstalledVoicePack } from '@/types/manager';
 
 /**
- * Build a merged catgen.gon.patch from enabled voice packs.
+ * Build a merged catgen.gon.patch from enabled voice packs and muted base packs.
  *
  * Uses voice_sets.append semantics — the game engine merges this
  * into the base catgen.gon at load time via Mewtator's modpath system.
  *
  * Rules:
- * - Only includes packs with isEnabled === true
+ * - Only includes custom packs with isEnabled === true
  * - Uses pack.id (= description.json title) as the voice set ID
  * - Sorted alphabetically by ID for deterministic output
+ * - Muted base packs are included with weight 0 to override defaults
  * - Emits voice_sets.append { ... }, never voice_sets {}
  * - Never reads or merges per-pack patch files
  */
-export function buildVoicePatch(packs: InstalledVoicePack[]): string {
+export function buildVoicePatch(
+  packs: InstalledVoicePack[],
+  mutedBasePacks: string[] = [],
+): string {
   const enabled = packs
     .filter((p) => p.isEnabled && !p.isBasePack)
     .sort((a, b) => a.id.localeCompare(b.id));
 
-  if (enabled.length === 0) {
+  const muteEntries = [...mutedBasePacks].sort();
+
+  if (enabled.length === 0 && muteEntries.length === 0) {
     return 'voice_sets.append {\n}\n';
   }
 
-  const entries = enabled
-    .map((p) => `    ${p.id} ${p.frequency}`)
-    .join('\n');
+  const lines: string[] = [];
 
-  return `voice_sets.append {\n${entries}\n}\n`;
+  for (const id of muteEntries) {
+    lines.push(`    ${id} 0`);
+  }
+
+  for (const p of enabled) {
+    lines.push(`    ${p.id} ${p.frequency}`);
+  }
+
+  return `voice_sets.append {\n${lines.join('\n')}\n}\n`;
 }
 
 /**
