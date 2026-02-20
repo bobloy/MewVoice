@@ -172,6 +172,11 @@ function PackRow({
           {pack.author && `by ${pack.author} · `}
           {pack.folderName}
         </p>
+        {pack.description && (
+          <p className="text-xs text-mew-muted/50 truncate mt-0.5">
+            {pack.description}
+          </p>
+        )}
       </div>
 
       {/* Frequency */}

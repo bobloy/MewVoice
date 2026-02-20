@@ -16,6 +16,8 @@ export function useAppState() {
     cmd
       .loadState()
       .then((s) => {
+        // Backfill mutedBasePacks for states saved before this field existed
+        if (!s.mutedBasePacks) s.mutedBasePacks = [];
         setState(s);
         setLoading(false);
       })
@@ -37,14 +39,14 @@ export function useAppState() {
     };
   }, [state, loading]);
 
-  // Recompute dirty state when packs change
+  // Recompute dirty state when packs or muted base packs change
   useEffect(() => {
     if (loading) return;
-    const patch = buildVoicePatch(state.packs);
+    const patch = buildVoicePatch(state.packs, state.mutedBasePacks);
     hashPatchContent(patch).then((hash) => {
       setPatchDirty(hash !== state.lastPatchHash);
     });
-  }, [state.packs, state.lastPatchHash, loading]);
+  }, [state.packs, state.mutedBasePacks, state.lastPatchHash, loading]);
 
   const setModRoot = useCallback((path: string | null) => {
     setState((s) => ({ ...s, mewtatorModRoot: path }));
@@ -86,13 +88,22 @@ export function useAppState() {
     }));
   }, []);
 
+  const toggleMuteBasePack = useCallback((packId: string) => {
+    setState((s) => {
+      const muted = s.mutedBasePacks.includes(packId)
+        ? s.mutedBasePacks.filter((id) => id !== packId)
+        : [...s.mutedBasePacks, packId];
+      return { ...s, mutedBasePacks: muted };
+    });
+  }, []);
+
   const regeneratePatch = useCallback(async () => {
     if (!state.mewtatorModRoot) {
       setError('Mewtator mod root not configured');
       return;
     }
     try {
-      const content = buildVoicePatch(state.packs);
+      const content = buildVoicePatch(state.packs, state.mutedBasePacks);
       await cmd.writeVoicePatch(state.mewtatorModRoot, content);
       const hash = await hashPatchContent(content);
       setState((s) => ({ ...s, lastPatchHash: hash }));
@@ -101,7 +112,7 @@ export function useAppState() {
     } catch (e) {
       setError(String(e));
     }
-  }, [state.mewtatorModRoot, state.packs]);
+  }, [state.mewtatorModRoot, state.packs, state.mutedBasePacks]);
 
   const importZip = useCallback(
     async (zipPath: string) => {
@@ -170,6 +181,7 @@ export function useAppState() {
     removePack,
     togglePack,
     setFrequency,
+    toggleMuteBasePack,
     regeneratePatch,
     importZip,
     uninstallPack,
