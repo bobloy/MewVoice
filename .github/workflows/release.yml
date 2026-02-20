@@ -31,3 +31,4 @@ jobs:
           releaseDraft: true
           prerelease: false
           projectPath: ./desktop
+          tauriScript: npm run build
