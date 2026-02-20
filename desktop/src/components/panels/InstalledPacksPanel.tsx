@@ -1,4 +1,3 @@
-import { open } from '@tauri-apps/plugin-dialog';
 import type { InstalledVoicePack } from '@/types/manager';
 
 interface InstalledPacksPanelProps {
@@ -23,12 +22,22 @@ export default function InstalledPacksPanel({
   patchDirty,
 }: InstalledPacksPanelProps) {
   const handleImport = async () => {
-    const selected = await open({
-      multiple: false,
-      filters: [{ name: 'Voice Pack', extensions: ['zip'] }],
-    });
-    if (selected) {
-      onImport(selected);
+    try {
+      let selected: string | null = null;
+      if ('__TAURI_INTERNALS__' in window) {
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        selected = await open({
+          multiple: false,
+          filters: [{ name: 'Voice Pack', extensions: ['zip'] }],
+        });
+      } else {
+        selected = window.prompt('Enter path to .zip file:');
+      }
+      if (selected) {
+        onImport(selected);
+      }
+    } catch (e) {
+      console.error('Import dialog error:', e);
     }
   };
 
