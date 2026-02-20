@@ -181,7 +181,7 @@ export function InstructionsPage() {
           <span className="text-mew-text font-medium">MewVoice Desktop</span> app,
           which manages your packs and registers them with{' '}
           <a
-            href="https://github.com/ShootMe/Mewtator"
+            href="https://www.nexusmods.com/mewgenics/mods/1"
             target="_blank"
             rel="noopener noreferrer"
             className="text-mew-accent hover:underline"
@@ -197,12 +197,12 @@ export function InstructionsPage() {
             <span className="text-mew-text font-medium">Install Mewtator</span> —
             follow the instructions on the{' '}
             <a
-              href="https://github.com/ShootMe/Mewtator"
+              href="https://www.nexusmods.com/mewgenics/mods/1"
               target="_blank"
               rel="noopener noreferrer"
               className="text-mew-accent hover:underline"
             >
-              Mewtator GitHub page
+              Nexus Mods page
             </a>{' '}
             to set up the mod loader.
           </li>
