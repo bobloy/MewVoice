@@ -123,7 +123,6 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
   );
 
   const recordingLimit = AUDIO_REQUIREMENTS.recordingLimitSec;
-  const maxDur = AUDIO_REQUIREMENTS.maxDurationSec;
 
   return (
     <div className="bg-mew-surface rounded-xl p-5 border border-mew-highlight/30">

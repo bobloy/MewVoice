@@ -10,7 +10,6 @@
 const TARGET_SAMPLE_RATE = 44100;
 const TARGET_CHANNELS = 1;
 const TARGET_DBFS = -1.0; // Boosted to -1.0dBFS peak for game-ready loudness
-const SILENCE_THRESH_DBFS = -45;
 const MIN_DURATION = 0.05;
 const MAX_DURATION = 8;
 
@@ -77,9 +76,6 @@ export async function convertToGameWav(blob: Blob, volumeAdjustmentDb: number = 
 
   samples = normalizeToPeak(samples, effectiveTarget);
 
-  // 2. No automatic silence trimming
-  // samples = trimSilence(samples, SILENCE_THRESH_DBFS); <-- REMOVED per user request
-
   const outputDuration = samples.length / TARGET_SAMPLE_RATE;
 
   // Encode
@@ -114,52 +110,6 @@ function normalizeToPeak(samples: Float32Array, targetDbfs: number): Float32Arra
   return samples;
 }
 
-
-
-/**
- * Trim leading and trailing silence from audio samples.
- */
-function trimSilence(samples: Float32Array, threshDbfs: number): Float32Array {
-  const threshLinear = Math.pow(10, threshDbfs / 20);
-  const chunkSize = Math.floor(TARGET_SAMPLE_RATE * 0.01); // 10ms chunks
-
-  let startSample = 0;
-  for (let i = 0; i < samples.length; i += chunkSize) {
-    const end = Math.min(i + chunkSize, samples.length);
-    let chunkRms = 0;
-    for (let j = i; j < end; j++) {
-      chunkRms += samples[j] * samples[j];
-    }
-    chunkRms = Math.sqrt(chunkRms / (end - i));
-    if (chunkRms > threshLinear) {
-      startSample = Math.max(0, i - chunkSize);
-      break;
-    }
-  }
-
-  let endSample = samples.length;
-  for (let i = samples.length; i > 0; i -= chunkSize) {
-    const start = Math.max(i - chunkSize, 0);
-    let chunkRms = 0;
-    for (let j = start; j < i; j++) {
-      chunkRms += samples[j] * samples[j];
-    }
-    chunkRms = Math.sqrt(chunkRms / (i - start));
-    if (chunkRms > threshLinear) {
-      endSample = Math.min(samples.length, i + chunkSize);
-      break;
-    }
-  }
-
-  const trimmed = samples.slice(startSample, endSample);
-
-  // If trimming removed too much, return original
-  if (trimmed.length < TARGET_SAMPLE_RATE * 0.05) {
-    return samples;
-  }
-
-  return trimmed;
-}
 
 /**
  * Encode Float32 samples as a 16-bit PCM WAV file.
