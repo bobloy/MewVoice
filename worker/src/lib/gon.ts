@@ -1,6 +1,5 @@
 /**
  * GON Voice File Generator for Mewgenics.
- * Port of server/gon_generator.py to TypeScript.
  */
 
 const GON_ACTIONS = ['Angry', 'Death', 'Happy', 'Hiss', 'Hit', 'Normal', 'Purr', 'Sad', 'Sing'];
@@ -52,10 +51,3 @@ export function generateVoiceGon(
   return lines.join('\n');
 }
 
-/**
- * Generates a Mewtator-compatible .patch file for catgen.gon.
- * This adds the new voice pack to the voice_sets block.
- */
-export function generateCatgenPatch(packName: string): string {
-  return `voice_sets {\n    ${packName} 1\n}\n`;
-}

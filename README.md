@@ -1,32 +1,41 @@
-# Mewgenics Voice Pack Creator
+# MewVoice
 
-Community web tool for creating and sharing custom cat voice packs for Mewgenics, compatible with the [Mewtator](https://github.com/ShootMe/Mewtator) mod loader.
-Packs are designed to be installed as a single "Master Mod" for easy management.
+Community tool for creating and sharing custom cat voice packs for Mewgenics, compatible with the [Mewtator](https://github.com/ShootMe/Mewtator) mod loader.
 
 ## Architecture
-- `client/` → React + TypeScript + Vite (port 3000)
-- `server/` → Python FastAPI (port 8000)
 
-## Setup
+- `client/` → React + Vite web app (pack builder + community library)
+- `worker/` → Cloudflare Workers API (pack storage, library, auth)
+- `desktop/` → Tauri desktop app (local pack installation + management)
+
+## Development
 
 ### Prerequisites
-- Node.js 18+, Python 3.11+, ffmpeg
+- Node.js 18+
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) for the worker
+- [Rust + Tauri CLI](https://tauri.app/start/prerequisites/) for the desktop app
 
-### Client
+### Client (web)
 ```bash
 cd client
 npm install
 npm run dev
 ```
 
-### Server
+### Worker (Cloudflare)
 ```bash
-cd server
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+cd worker
+npm install
+npx wrangler dev
 ```
 
-### Open
-http://localhost:3000
+### Desktop (Tauri)
+```bash
+cd desktop
+npm install
+npm run tauri dev
+```
+
+## Distribution
+
+The desktop app is distributed via [GitHub Releases](../../releases). The web client and worker are deployed to Cloudflare.

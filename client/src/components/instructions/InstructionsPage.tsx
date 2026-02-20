@@ -57,8 +57,8 @@ export function InstructionsPage() {
             — share it in the community library.
           </li>
           <li>
-            <span className="text-mew-text font-medium">Install</span> —
-            extract your downloaded ZIPs into the game's mods folder. See below.
+            <span className="text-mew-text font-medium">Install</span> — import
+            the ZIP into the MewVoice Desktop app. See below.
           </li>
         </ol>
       </section>
@@ -177,7 +177,9 @@ export function InstructionsPage() {
         <h2 className="text-2xl font-bold mb-3">Installing voice packs</h2>
 
         <p className="text-mew-muted text-sm mb-4">
-          MewVoice packs are compatible with the{' '}
+          Voice packs are installed using the{' '}
+          <span className="text-mew-text font-medium">MewVoice Desktop</span> app,
+          which manages your packs and registers them with{' '}
           <a
             href="https://github.com/ShootMe/Mewtator"
             target="_blank"
@@ -185,51 +187,77 @@ export function InstructionsPage() {
             className="text-mew-accent hover:underline"
           >
             Mewtator
-          </a>{' '}
-          mod loader.
+          </a>
+          .
         </p>
 
-        <h3 className="text-lg font-bold mt-4 mb-2">Instructions</h3>
+        <h3 className="text-lg font-bold mt-4 mb-2">Setup</h3>
         <ol className="space-y-3 text-mew-muted text-sm list-decimal list-inside mb-4">
           <li>
             <span className="text-mew-text font-medium">Install Mewtator</span> —
-            follow the instructions on the Mewtator GitHub page to set up the mod loader.
+            follow the instructions on the{' '}
+            <a
+              href="https://github.com/ShootMe/Mewtator"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-mew-accent hover:underline"
+            >
+              Mewtator GitHub page
+            </a>{' '}
+            to set up the mod loader.
           </li>
           <li>
-            <span className="text-mew-text font-medium">Download your voice packs</span> —
-            get the ZIP files for the voices you want to use.
+            <span className="text-mew-text font-medium">Download MewVoice Desktop</span> —
+            grab the latest release from{' '}
+            <a
+              href="https://github.com/akendall/MewgenicsVoicePack/releases"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-mew-accent hover:underline"
+            >
+              GitHub Releases
+            </a>
+            .
           </li>
           <li>
-            <span className="text-mew-text font-medium">Extract to MewVoice folder</span> —
-            unzip each pack into the <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">mods/MewVoice/</code> directory.
-            <div className="mt-2 pl-6 border-l-2 border-mew-highlight/20">
-              <p className="text-xs">All your voices live in one master mod folder:</p>
-              <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono whitespace-pre">
-                Mewgenics/mods/MewVoice/{"\n"}
-                ├── description.json{"\n"}
-                ├── audio/{"\n"}
-                │   └── voices/{"\n"}
-                │       ├── Pack1.gon{"\n"}
-                │       ├── Pack1/{"\n"}
-                │       ├── Pack2.gon{"\n"}
-                │       └── Pack2/{"\n"}
-                └── data/{"\n"}
-                {"    "}├── catgen.gon.Pack1.patch{"\n"}
-                {"    "}└── catgen.gon.Pack2.patch
-              </code>
-            </div>
+            <span className="text-mew-text font-medium">Point it at your mods folder</span> —
+            on first launch, the app will ask you to select your Mewtator{' '}
+            <code className="bg-mew-bg rounded px-1.5 py-0.5 text-xs font-mono">mods</code>{' '}
+            directory.
+          </li>
+        </ol>
+
+        <h3 className="text-lg font-bold mt-4 mb-2">Installing packs</h3>
+        <ol className="space-y-3 text-mew-muted text-sm list-decimal list-inside mb-4">
+          <li>
+            <span className="text-mew-text font-medium">Download voice packs</span> —
+            build your own above or grab one from the community library.
+          </li>
+          <li>
+            <span className="text-mew-text font-medium">Import the ZIP</span> —
+            open MewVoice Desktop and import the downloaded ZIP file. The app
+            extracts the audio and registers the voice with the game.
+          </li>
+          <li>
+            <span className="text-mew-text font-medium">Enable and adjust</span> —
+            toggle packs on/off and set spawn frequency. The app writes a single
+            merged patch file so all your packs work together.
           </li>
           <li>
             <span className="text-mew-text font-medium">Launch the game</span> —
-            Mewtator will automatically detect the mods and apply the patches.
+            Mewtator picks up the changes automatically.
           </li>
         </ol>
 
         <div className="mt-4 bg-mew-accent/10 rounded-lg p-4 border border-mew-accent/30">
-          <p className="text-mew-accent text-sm font-medium mb-1">Master Mod Strategy</p>
+          <p className="text-mew-accent text-sm font-medium mb-1">Why a desktop app?</p>
           <p className="text-mew-muted text-xs leading-relaxed">
-            By extracting all packs into the same <code className="font-mono">MewVoice</code> folder, they share a single mod entry in the loader while remaining fully compatible. 
-            Each pack includes its own unique <code className="font-mono">catgen.gon.packname.patch</code> file to avoid conflicts.
+            The game needs a single merged patch file listing all active voice packs
+            and their spawn weights. MewVoice Desktop manages this automatically —
+            importing, enabling/disabling, adjusting frequency, and muting base
+            game voices all update one{' '}
+            <code className="font-mono">catgen.gon.patch</code>{' '}
+            file without you touching any game files.
           </p>
         </div>
       </section>

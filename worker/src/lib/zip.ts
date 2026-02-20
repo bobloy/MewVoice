@@ -1,9 +1,8 @@
 /**
  * ZIP creation and reading utilities using JSZip.
- * Port of server/pack_builder.py to TypeScript.
  */
 import JSZip from 'jszip';
-import { generateVoiceGon, generateCatgenPatch } from './gon';
+import { generateVoiceGon } from './gon';
 
 export interface BuildMetadata {
   name: string;
@@ -36,9 +35,6 @@ export async function buildVoicePackZip(
   };
   zip.file('description.json', JSON.stringify(mewtatorMeta, null, 2));
   zip.file(`metadata_${packName}.json`, JSON.stringify(metadata, null, 2));
-
-  // Mewtator patch
-  zip.file(`data/catgen.gon.${packName}.patch`, generateCatgenPatch(packName));
 
   // Group files by action for GON generation
   const actionFiles: Record<string, string[]> = {};
