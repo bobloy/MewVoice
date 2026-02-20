@@ -3,6 +3,7 @@ import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import {
   VoiceAction,
   AudioClip,
+  VOICE_ACTIONS,
   ACTION_DESCRIPTIONS,
   ACTION_RECOMMENDED_CLIPS,
   CORE_ACTIONS,
@@ -16,13 +17,16 @@ import { TrimModal } from '@/components/recorder/TrimModal';
 interface ActionRecorderProps {
   action: VoiceAction;
   clips: AudioClip[];
+  /** Normal clips passed to the Sing section for fallback display */
+  normalClips?: AudioClip[];
   onAddClip: (clip: AudioClip) => void;
   onRemoveClip: (clipId: string) => void;
   onUpdateClip: (clip: AudioClip) => void;
   onMoveClip: (clipId: string, toAction: VoiceAction) => void;
+  onCopyClip: (clipId: string, toAction: VoiceAction, fromAction?: VoiceAction) => void;
 }
 
-export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdateClip, onMoveClip }: ActionRecorderProps) {
+export function ActionRecorder({ action, clips, normalClips, onAddClip, onRemoveClip, onUpdateClip, onMoveClip, onCopyClip }: ActionRecorderProps) {
   const {
     isRecording,
     stream,
@@ -167,30 +171,45 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
                 <button
                   onClick={() => setIsMoveMenuOpen(isMoveMenuOpen === clip.id ? null : clip.id)}
                   className={`text-sm px-1.5 py-0.5 rounded transition-colors ${isMoveMenuOpen === clip.id ? 'text-mew-accent bg-mew-highlight/30' : 'text-mew-muted hover:text-mew-accent hover:bg-mew-highlight/30'}`}
-                  title="Move to another category"
+                  title="Move or copy to another category"
                 >
                   ➔
                 </button>
 
                 {isMoveMenuOpen === clip.id && (
                   <>
-                    {/* Backdrop to close */}
                     <div className="fixed inset-0 z-10" onClick={() => setIsMoveMenuOpen(null)} />
 
-                    <div className="absolute right-0 top-full mt-1 w-32 bg-mew-surface border border-mew-highlight/50 rounded-lg shadow-xl z-20 max-h-48 overflow-y-auto">
-                      {Object.keys(ACTION_RECOMMENDED_CLIPS).map((targetAction) => (
-                        targetAction !== action && (
-                          <button
-                            key={targetAction}
-                            onClick={() => {
-                              onMoveClip(clip.id, targetAction as VoiceAction);
-                              setIsMoveMenuOpen(null);
-                            }}
-                            className="block w-full text-left px-3 py-2 text-xs text-mew-text hover:bg-mew-accent/20 first:rounded-t-lg last:rounded-b-lg"
-                          >
-                            {targetAction}
-                          </button>
-                        )
+                    <div className="absolute right-0 top-full mt-1 w-40 bg-mew-surface border border-mew-highlight/50 rounded-lg shadow-xl z-20 max-h-64 overflow-y-auto">
+                      <div className="px-3 py-1.5 text-[10px] font-semibold text-mew-muted/60 uppercase tracking-wider border-b border-mew-highlight/20">
+                        Move to
+                      </div>
+                      {VOICE_ACTIONS.filter(a => a !== action).map((targetAction) => (
+                        <button
+                          key={`move-${targetAction}`}
+                          onClick={() => {
+                            onMoveClip(clip.id, targetAction);
+                            setIsMoveMenuOpen(null);
+                          }}
+                          className="block w-full text-left px-3 py-1.5 text-xs text-mew-text hover:bg-mew-accent/20"
+                        >
+                          {targetAction}
+                        </button>
+                      ))}
+                      <div className="px-3 py-1.5 text-[10px] font-semibold text-mew-muted/60 uppercase tracking-wider border-t border-b border-mew-highlight/20">
+                        Copy to
+                      </div>
+                      {VOICE_ACTIONS.filter(a => a !== action).map((targetAction) => (
+                        <button
+                          key={`copy-${targetAction}`}
+                          onClick={() => {
+                            onCopyClip(clip.id, targetAction);
+                            setIsMoveMenuOpen(null);
+                          }}
+                          className="block w-full text-left px-3 py-1.5 text-xs text-mew-text hover:bg-mew-accent/20 last:rounded-b-lg"
+                        >
+                          {targetAction}
+                        </button>
                       ))}
                     </div>
                   </>
@@ -211,6 +230,11 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
             </div>
           ))}
         </div>
+      )}
+
+      {/* Sing fallback indicator: show which Normal clip the game will use */}
+      {action === 'Sing' && clips.length === 0 && normalClips && normalClips.length > 0 && (
+        <SingFallbackDisplay normalClips={normalClips} onCopyToSing={onCopyClip} />
       )}
 
       {/* Record / Upload controls */}
@@ -279,6 +303,79 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
           onClose={() => setTrimmingClip(null)}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * Shows which Normal clips will be used as sing fallback, ranked by suitability.
+ *
+ * Selection logic: shorter Normal clips are better for singing because the game
+ * repeats them rapidly at different pitches. We rank by duration (ascending) and
+ * highlight the first Normal clip since that's what the GON fallback actually uses.
+ */
+function SingFallbackDisplay({
+  normalClips,
+  onCopyToSing,
+}: {
+  normalClips: AudioClip[];
+  onCopyToSing: (clipId: string, toAction: VoiceAction, fromAction?: VoiceAction) => void;
+}) {
+  // Rank Normal clips by suitability for singing: shorter = better
+  const ranked = [...normalClips]
+    .map((clip, originalIndex) => ({ clip, originalIndex }))
+    .sort((a, b) => a.clip.duration - b.clip.duration);
+
+  // The GON fallback uses Normal[0] (the first Normal clip by order, not by duration)
+  const fallbackClipId = normalClips[0]?.id;
+
+  return (
+    <div className="mb-4 rounded-lg border border-amber-700/30 bg-amber-900/10 p-3">
+      <p className="text-xs text-amber-400 font-medium mb-2">
+        No sing clips uploaded — the game will repeat your first Normal clip at
+        varying pitches to emulate singing. Shorter clips work best.
+      </p>
+      <div className="space-y-1.5">
+        {ranked.map(({ clip, originalIndex }) => {
+          const isFallback = clip.id === fallbackClipId;
+          const isShort = clip.duration <= 1.0;
+          return (
+            <div
+              key={clip.id}
+              className={`flex items-center gap-2 p-1.5 rounded text-xs ${
+                isFallback
+                  ? 'bg-amber-900/30 border border-amber-700/40'
+                  : 'bg-mew-bg/30'
+              }`}
+            >
+              <span className="text-mew-muted w-10 flex-shrink-0">
+                N#{originalIndex + 1}
+              </span>
+              <audio src={clip.url} controls className="h-7 flex-1" />
+              <span className={`flex-shrink-0 ${isShort ? 'text-green-400' : 'text-mew-muted'}`}>
+                {clip.duration.toFixed(1)}s
+              </span>
+              {isFallback && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-800/50 text-amber-300 flex-shrink-0">
+                  active fallback
+                </span>
+              )}
+              {isShort && !isFallback && (
+                <span className="text-[10px] text-green-400/70 flex-shrink-0">
+                  good fit
+                </span>
+              )}
+              <button
+                onClick={() => onCopyToSing(clip.id, 'Sing', 'Normal')}
+                className="text-mew-accent hover:text-mew-accent/80 text-[10px] px-1.5 py-0.5 rounded bg-mew-accent/10 hover:bg-mew-accent/20 transition-colors flex-shrink-0"
+                title="Copy this clip to Sing"
+              >
+                Copy to Sing
+              </button>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

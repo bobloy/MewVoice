@@ -102,6 +102,27 @@ export function PackBuilder() {
     });
   }, []);
 
+  const handleCopyClip = useCallback((clipId: string, fromAction: VoiceAction, toAction: VoiceAction) => {
+    setPack((prev) => {
+      const clipToCopy = prev.clips[fromAction].find(c => c.id === clipId);
+      if (!clipToCopy) return prev;
+
+      const copiedClip: AudioClip = {
+        ...clipToCopy,
+        id: `${clipToCopy.id}_copy_${Date.now()}`,
+        action: toAction,
+      };
+
+      return {
+        ...prev,
+        clips: {
+          ...prev.clips,
+          [toAction]: [...prev.clips[toAction], copiedClip],
+        }
+      };
+    });
+  }, []);
+
 
 
   const handleBuild = async () => {
@@ -270,10 +291,12 @@ export function PackBuilder() {
               key={action}
               action={action}
               clips={pack.clips[action]}
+              normalClips={action === 'Sing' ? pack.clips.Normal : undefined}
               onAddClip={handleAddClip}
               onRemoveClip={(clipId) => handleRemoveClip(action, clipId)}
               onUpdateClip={handleUpdateClip}
               onMoveClip={(clipId, toAction) => handleMoveClip(clipId, action, toAction)}
+              onCopyClip={(clipId, toAction, fromAction) => handleCopyClip(clipId, fromAction || action, toAction)}
             />
           ))}
         </div>

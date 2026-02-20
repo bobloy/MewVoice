@@ -37,7 +37,7 @@ export const ACTION_DESCRIPTIONS: Record<VoiceAction, string> = {
   Sad: 'Sad meows — whimpering, whining, lonely sounds (~1.2s each)',
   Hiss: 'Hissing and spitting — defensive warning sounds. Optional, but most packs include them (~1.1s each)',
   Purr: 'Purring — longer, sustained relaxed sounds. Optional (~1.6s each)',
-  Sing: 'Singing — melodic meow. Most packs skip this entirely, totally optional (~0.7s each)',
+  Sing: 'Singing — a very short meow the game repeats at different pitches to emulate a song. Keep it punchy (~0.7s). If empty, your first Normal clip is used instead',
 };
 
 /**
