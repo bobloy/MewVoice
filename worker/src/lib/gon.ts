@@ -53,51 +53,9 @@ export function generateVoiceGon(
 }
 
 /**
- * Generate install instructions text for a voice pack.
+ * Generates a Mewtator-compatible .patch file for catgen.gon.
+ * This adds the new voice pack to the voice_sets block.
  */
-export function generateInstallInstructions(packName: string): string {
-  return `========================================
-  MewVoice — Install Guide
-========================================
-
-Voice Pack: ${packName}
-
-AUTOMATIC INSTALL (recommended):
----------------------------------
-Download install_voicepack.py from MewVoice, then put your
-downloaded voice pack ZIPs into a folder and run:
-
-    python install_voicepack.py my_voice_packs/
-
-On first run it saves a vanilla baseline. Every run after that
-rebuilds from the baseline — add/remove ZIPs and re-run.
-
-Single ZIP:  python install_voicepack.py ${packName}.zip
-Uninstall:   python install_voicepack.py --uninstall
-
-
-MANUAL INSTALL:
----------------
-
-1. BACKUP your original resources.gpak
-
-2. EXTRACT game resources using the GPAK-Extractor:
-   https://github.com/ShootMe/GPAK-Extractor
-   Drag resources.gpak onto the exe to unpack.
-
-3. COPY the voice files from this ZIP into the extracted output:
-   audio/voices/${packName}.gon
-   audio/voices/${packName}/*.wav
-
-4. REGISTER in catgen.gon:
-   Open: data/catgen.gon
-   Find "voice_sets {{"
-   Add:  ${packName} 1
-
-5. REPACK: drag the output folder onto GPAK-Extractor
-
-6. REPLACE original resources.gpak
-
-7. Launch Mewgenics!
-`;
+export function generateCatgenPatch(packName: string): string {
+  return `voice_sets {\n    ${packName} 1\n}\n`;
 }

@@ -31,12 +31,12 @@ export const OPTIONAL_ACTIONS: VoiceAction[] = ['Hiss', 'Purr', 'Sing'];
 export const ACTION_DESCRIPTIONS: Record<VoiceAction, string> = {
   Normal: 'Idle meows — casual everyday vocalizations, the bread and butter of your voice (~0.8s each)',
   Hit: 'Taking damage — the shortest clips, quick sharp yelps or squeaks (~0.7s each)',
-  Angry: 'Aggressive meows — hissing, growling, or yowling when mad or attacking (~1s each)',
+  Angry: 'Aggressive meows — hissing, growling, or yowling when mad or attacking (~1.1s each)',
   Happy: 'Cheerful meows — short, bright sounds when content or playful (~1s each)',
   Death: 'Dying sounds — dramatic, drawn-out pain vocalizations. These run longer (~1.8s each)',
   Sad: 'Sad meows — whimpering, whining, lonely sounds (~1.2s each)',
-  Hiss: 'Hissing and spitting — defensive warning sounds. Optional, but most packs include them (~1s each)',
-  Purr: 'Purring — longer, sustained relaxed sounds. Optional (~1.5s each)',
+  Hiss: 'Hissing and spitting — defensive warning sounds. Optional, but most packs include them (~1.1s each)',
+  Purr: 'Purring — longer, sustained relaxed sounds. Optional (~1.6s each)',
   Sing: 'Singing — melodic meow. Most packs skip this entirely, totally optional (~0.7s each)',
 };
 
@@ -55,16 +55,16 @@ export const ACTION_DESCRIPTIONS: Record<VoiceAction, string> = {
  *   Purr     183    1    4.1   9
  *   Sing      82    1    1.3   4
  */
-export const ACTION_RECOMMENDED_CLIPS: Record<VoiceAction, { recommended: number; gameMin: number; gameMax: number }> = {
-  Normal: { recommended: 4, gameMin: 2, gameMax: 7 },
-  Hit:    { recommended: 5, gameMin: 2, gameMax: 16 },
-  Angry:  { recommended: 4, gameMin: 2, gameMax: 24 },
-  Happy:  { recommended: 4, gameMin: 2, gameMax: 8 },
-  Death:  { recommended: 4, gameMin: 1, gameMax: 11 },
-  Sad:    { recommended: 4, gameMin: 2, gameMax: 8 },
-  Hiss:   { recommended: 4, gameMin: 2, gameMax: 9 },
-  Purr:   { recommended: 4, gameMin: 1, gameMax: 9 },
-  Sing:   { recommended: 1, gameMin: 1, gameMax: 4 },
+export const ACTION_RECOMMENDED_CLIPS: Record<VoiceAction, { recommended: number; gameMin: number; gameMax: number; durationMax: number }> = {
+  Normal: { recommended: 4, gameMin: 2, gameMax: 7, durationMax: 4.41 },
+  Hit: { recommended: 5, gameMin: 2, gameMax: 16, durationMax: 3.62 },
+  Angry: { recommended: 4, gameMin: 2, gameMax: 24, durationMax: 4.08 },
+  Happy: { recommended: 4, gameMin: 2, gameMax: 8, durationMax: 5.27 },
+  Death: { recommended: 4, gameMin: 1, gameMax: 11, durationMax: 5.71 },
+  Sad: { recommended: 4, gameMin: 2, gameMax: 8, durationMax: 3.62 },
+  Hiss: { recommended: 4, gameMin: 2, gameMax: 9, durationMax: 3.88 },
+  Purr: { recommended: 4, gameMin: 1, gameMax: 9, durationMax: 5.30 },
+  Sing: { recommended: 1, gameMin: 1, gameMax: 4, durationMax: 1.27 },
 };
 
 /** Audio format requirements */
@@ -73,7 +73,9 @@ export const AUDIO_REQUIREMENTS = {
   channels: 1,       // mono
   bitDepth: 16,
   format: 'wav',
-  maxDurationSec: 6,
+  warningDurationSec: 6,
+  maxDurationSec: 8,
+  recordingLimitSec: 10,
   maxFileSizeMB: 1,
 } as const;
 
@@ -87,6 +89,7 @@ export interface AudioClip {
   fileName: string;
   isValid: boolean;
   validationErrors: string[];
+  validationWarnings: string[];
 }
 
 /** Gender flag for the voice pack (affects distinctly_female in .gon Meta) */

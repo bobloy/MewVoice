@@ -21,6 +21,7 @@ worker/.dev.vars
 server/data/
 _*.txt
 unpacked/
+Mewtator-1-0-1-0-1771020481/
 
 # Cloudflare Workers
 worker/.wrangler/

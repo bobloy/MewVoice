@@ -1,6 +1,7 @@
 # Mewgenics Voice Pack Creator
 
-Community web tool for creating, sharing, and installing custom cat voice packs for Mewgenics.
+Community web tool for creating and sharing custom cat voice packs for Mewgenics, compatible with the [Mewtator](https://github.com/ShootMe/Mewtator) mod loader.
+Packs are designed to be installed as a single "Master Mod" for easy management.
 
 ## Architecture
 - `client/` → React + TypeScript + Vite (port 3000)

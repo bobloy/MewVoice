@@ -1,0 +1,83 @@
+Mewgenics Mewtator Modding Guide
+
+# Core Concept
+Mewtator is a mod launcher that injects custom arguments (e.g., `-modpaths C:\path\to\mod`) into the game. It does NOT modify or unpack the base game resources (`resources.gpak`). The game engine itself handles loading `.patch`, `.append`, and `.merge` files from the specified mod paths.
+
+# General Workflow
+1. Create your mod structure in a folder (e.g., `Mewtator/mods/MyMod`).
+2. Add a `description.json` file to identify your mod (see format below).
+3. Place your modified files in the mod folder, mirroring the game's directory structure.
+4. Use the appropriate suffix for your changes:
+   - `.append` (Add new content to lists)
+   - `.merge` (Update specific fields in existing entries)
+   - `.patch` (Complex nested data modifications)
+
+# Merging Voice Packs
+When multiple voice packs are installed, they all attempt to modify `catgen.gon` to register themselves. To prevent conflicts, we use a merged patch file.
+
+## Instructions for Users
+1. Extract voice pack mods into `Mewtator/mods/MewVoice/`.
+   - Each pack should be in its own subfolder (e.g., `MewVoice/CoolCatVoice/`).
+2. Run the `merge_voicepacks.bat` script located in the `MewVoice` folder.
+3. This script scans all subfolders for `description.json`, extracts the `title`, and generates a single `catgen.gon.patch` file that registers all packs.
+
+## Instructions for Modders (description.json)
+Every voice pack MUST include a `description.json` file in its root folder.
+
+Format:
+```json
+{
+	"title": "unique_pack_id",
+	"description": "A brief description of your voice pack.",
+	"author": "YourName",
+	"version": "1.0.0"
+}
+```
+*Note: The `title` field is used as the internal ID for your voice set. It must be unique and contain no spaces.*
+
+# Suffix Behavior Rules
+
+## .append (Add Content)
+**Purpose**: Adds new data to the end of an existing file or list.
+**Use when**: Adding new SWFs or extending lists.
+**Example**:
+```
+game [
+    yourfile.swf
+]
+```
+*Tip: Always append SWFs instead of overwriting the list to allow multiple mods to work together.*
+
+## .merge (Change Specific Fields)
+**Purpose**: Updates specific fields in an existing entry without touching other data.
+**Use when**: Tweaking stats or changing palettes.
+**Structure**:
+```
+1 {
+    palette 5
+}
+```
+*This changes only the palette of entry 1.*
+
+## .patch (Complex Modifications)
+**Purpose**: Modify nested data or lists within an entry.
+**Use when**: adding to internal lists (like `art_alts`) or editing complex structures.
+**Example**:
+```
+1 {
+    palette 5
+    art_alts.append [
+        [Player PlayerRetro]
+    ]
+}
+```
+**Modifiers**:
+* `.overwrite`
+* `.append`
+* `.merge`
+* `.add` (numeric)
+* `.multiply` (numeric)
+
+# Audio Upload Improvements
+- Max audio length increased to 8 seconds.
+- Volume adjustment added to the upload/trim tool.

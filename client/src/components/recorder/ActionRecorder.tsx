@@ -19,9 +19,10 @@ interface ActionRecorderProps {
   onAddClip: (clip: AudioClip) => void;
   onRemoveClip: (clipId: string) => void;
   onUpdateClip: (clip: AudioClip) => void;
+  onMoveClip: (clipId: string, toAction: VoiceAction) => void;
 }
 
-export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdateClip }: ActionRecorderProps) {
+export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdateClip, onMoveClip }: ActionRecorderProps) {
   const {
     isRecording,
     stream,
@@ -37,6 +38,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
   } = useAudioRecorder();
   const [isUploading, setIsUploading] = useState(false);
   const [trimmingClip, setTrimmingClip] = useState<AudioClip | null>(null);
+  const [isMoveMenuOpen, setIsMoveMenuOpen] = useState<string | null>(null);
   const info = ACTION_RECOMMENDED_CLIPS[action];
   const isCore = CORE_ACTIONS.includes(action);
   const meetsRecommended = clips.length >= info.recommended;
@@ -65,7 +67,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
     if (!audioBlob || isRecording) return;
 
     const clipUrl = URL.createObjectURL(audioBlob);
-    const validation = validateAudioClip(audioBlob, duration);
+    const validation = validateAudioClip(audioBlob, duration, action);
 
     const clip: AudioClip = {
       id: generateClipId(),
@@ -76,6 +78,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
       fileName: `${action.toLowerCase()}${clips.length + 1}.webm`,
       isValid: validation.valid,
       validationErrors: validation.errors,
+      validationWarnings: validation.warnings,
     };
 
     onAddClip(clip);
@@ -97,7 +100,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
         const blob = file as Blob;
         const url = URL.createObjectURL(blob);
         const dur = await getAudioDuration(blob).catch(() => 0);
-        const validation = validateAudioClip(blob, dur);
+        const validation = validateAudioClip(blob, dur, action);
 
         const clip: AudioClip = {
           id: generateClipId(),
@@ -108,6 +111,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
           fileName: file.name,
           isValid: validation.valid,
           validationErrors: validation.errors,
+          validationWarnings: validation.warnings,
         };
         onAddClip(clip);
       }
@@ -118,6 +122,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
     [action, onAddClip]
   );
 
+  const recordingLimit = AUDIO_REQUIREMENTS.recordingLimitSec;
   const maxDur = AUDIO_REQUIREMENTS.maxDurationSec;
 
   return (
@@ -138,9 +143,8 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
           {clips.map((clip, idx) => (
             <div
               key={clip.id}
-              className={`flex items-center gap-2 p-2 rounded-lg ${
-                clip.isValid ? 'bg-mew-bg/50' : 'bg-red-900/20 border border-red-800/30'
-              }`}
+              className={`flex items-center gap-2 p-2 rounded-lg ${clip.isValid ? 'bg-mew-bg/50' : 'bg-red-900/20 border border-red-800/30'
+                }`}
             >
               <span className="text-mew-muted text-xs w-6">#{idx + 1}</span>
               <audio src={clip.url} controls className="h-8 flex-1" />
@@ -148,7 +152,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
               <button
                 onClick={() => setTrimmingClip(clip)}
                 className="text-mew-muted hover:text-mew-accent text-sm px-1.5 py-0.5 rounded hover:bg-mew-highlight/30 transition-colors"
-                title="Trim clip"
+                title="Edit / Trim"
               >
                 ✂️
               </button>
@@ -159,9 +163,46 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
               >
                 🎲
               </button>
-              {!clip.isValid && (
+
+              <div className="relative">
+                <button
+                  onClick={() => setIsMoveMenuOpen(isMoveMenuOpen === clip.id ? null : clip.id)}
+                  className={`text-sm px-1.5 py-0.5 rounded transition-colors ${isMoveMenuOpen === clip.id ? 'text-mew-accent bg-mew-highlight/30' : 'text-mew-muted hover:text-mew-accent hover:bg-mew-highlight/30'}`}
+                  title="Move to another category"
+                >
+                  ➔
+                </button>
+
+                {isMoveMenuOpen === clip.id && (
+                  <>
+                    {/* Backdrop to close */}
+                    <div className="fixed inset-0 z-10" onClick={() => setIsMoveMenuOpen(null)} />
+
+                    <div className="absolute right-0 top-full mt-1 w-32 bg-mew-surface border border-mew-highlight/50 rounded-lg shadow-xl z-20 max-h-48 overflow-y-auto">
+                      {Object.keys(ACTION_RECOMMENDED_CLIPS).map((targetAction) => (
+                        targetAction !== action && (
+                          <button
+                            key={targetAction}
+                            onClick={() => {
+                              onMoveClip(clip.id, targetAction as VoiceAction);
+                              setIsMoveMenuOpen(null);
+                            }}
+                            className="block w-full text-left px-3 py-2 text-xs text-mew-text hover:bg-mew-accent/20 first:rounded-t-lg last:rounded-b-lg"
+                          >
+                            {targetAction}
+                          </button>
+                        )
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {!clip.isValid ? (
                 <span className="text-xs text-red-400">{clip.validationErrors[0]}</span>
-              )}
+              ) : clip.validationWarnings.length > 0 ? (
+                <span className="text-xs text-amber-400">{clip.validationWarnings[0]}</span>
+              ) : null}
               <button
                 onClick={() => onRemoveClip(clip.id)}
                 className="text-red-400 hover:text-red-300 text-sm px-2"
@@ -180,11 +221,10 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
           <button
             onClick={handleRecordClick}
             disabled={isPreparing}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
-              isRecording
-                ? 'bg-mew-highlight hover:brightness-125 text-mew-text'
-                : 'bg-mew-accent hover:brightness-125 text-white disabled:opacity-50'
-            }`}
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${isRecording
+              ? 'bg-mew-highlight hover:brightness-125 text-mew-text'
+              : 'bg-mew-accent hover:brightness-125 text-white disabled:opacity-50'
+              }`}
           >
             {isRecording ? 'Stop' : isPreparing ? 'Preparing Mic...' : 'Record'}
           </button>
@@ -213,7 +253,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
               </div>
               <span className="text-sm font-mono text-mew-text">
                 {elapsed.toFixed(1)}s
-                <span className="text-mew-muted"> / {maxDur}s</span>
+                <span className="text-mew-muted"> / {recordingLimit}s</span>
               </span>
             </div>
 
@@ -221,7 +261,7 @@ export function ActionRecorder({ action, clips, onAddClip, onRemoveClip, onUpdat
             <div className="w-full bg-mew-highlight/40 rounded-full h-1.5 mb-3">
               <div
                 className="h-1.5 rounded-full bg-mew-accent transition-all duration-100"
-                style={{ width: `${Math.min(100, (elapsed / maxDur) * 100)}%` }}
+                style={{ width: `${Math.min(100, (elapsed / recordingLimit) * 100)}%` }}
               />
             </div>
 
