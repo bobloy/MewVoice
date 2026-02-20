@@ -171,7 +171,7 @@ async def build_voicepack(
         "author": "MewVoice Community",
         "version": "1.0.0"
     }
-    (build_dir / "metadata.json").write_text(json.dumps(mewtator_meta, indent=2))
+    (build_dir / "description.json").write_text(json.dumps(mewtator_meta, indent=2))
 
     metadata = {
         "name": name, "author": author, "gender": gender, "description": description,

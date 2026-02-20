@@ -15,13 +15,6 @@ export default function SettingsPanel({
   onSetAutoSync,
   onScan,
 }: SettingsPanelProps) {
-  const handleAutoDetect = async () => {
-    const detected = await cmd.detectMewtatorPath();
-    if (detected) {
-      onSetModRoot(detected);
-    }
-  };
-
   const handleBrowse = async () => {
     const selected = await cmd.pickFolder();
     if (selected) {
@@ -59,12 +52,6 @@ export default function SettingsPanel({
           </button>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={handleAutoDetect}
-            className="px-3 py-1.5 text-xs bg-mew-highlight/30 border border-mew-highlight/50 rounded hover:bg-mew-highlight/50 transition-colors"
-          >
-            Auto-Detect
-          </button>
           {modRoot && (
             <button
               onClick={() => onSetModRoot(null)}

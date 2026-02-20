@@ -19,7 +19,6 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::state::load_state,
             commands::state::save_state,
-            commands::paths::detect_mewtator_path,
             commands::paths::pick_folder,
             commands::paths::validate_mod_path,
             commands::catgen::write_voice_patch,

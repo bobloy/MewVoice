@@ -206,7 +206,7 @@ export function InstructionsPage() {
               <p className="text-xs">All your voices live in one master mod folder:</p>
               <code className="block mt-1 bg-mew-bg rounded px-3 py-1.5 text-xs text-mew-text font-mono whitespace-pre">
                 Mewgenics/mods/MewVoice/{"\n"}
-                ├── metadata.json{"\n"}
+                ├── description.json{"\n"}
                 ├── audio/{"\n"}
                 │   └── voices/{"\n"}
                 │       ├── Pack1.gon{"\n"}

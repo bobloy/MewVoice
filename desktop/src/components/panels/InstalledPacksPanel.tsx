@@ -67,6 +67,14 @@ export default function InstalledPacksPanel({
           </p>
         </div>
         <div className="flex gap-2">
+          <a
+            href="https://mewvoice.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 text-sm bg-mew-surface border border-mew-highlight/50 rounded hover:bg-mew-highlight/30 transition-colors"
+          >
+            Download More Voices
+          </a>
           <button
             onClick={onScan}
             className="px-3 py-1.5 text-sm bg-mew-surface border border-mew-highlight/50 rounded hover:bg-mew-highlight/30 transition-colors"
@@ -88,6 +96,14 @@ export default function InstalledPacksPanel({
           <p className="text-sm text-mew-muted/60 mt-1">
             Import a .zip from MewVoice or click "Rescan Folder" to detect existing packs.
           </p>
+          <a
+            href="https://mewvoice.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-4 px-4 py-2 text-sm bg-mew-accent text-white rounded hover:bg-mew-accent/80 transition-colors"
+          >
+            Download More Voices
+          </a>
         </div>
       ) : (
         <div className="space-y-2">
@@ -163,10 +179,10 @@ function PackRow({
         <label className="text-xs text-mew-muted">Weight:</label>
         <input
           type="number"
-          min={1}
+          min={0}
           max={99}
           value={pack.frequency}
-          onChange={(e) => onSetFrequency(parseInt(e.target.value) || 1)}
+          onChange={(e) => onSetFrequency(parseInt(e.target.value) || 0)}
           className="w-12 px-1.5 py-0.5 text-sm text-center bg-mew-bg border border-mew-highlight/50 rounded"
           disabled={!pack.isEnabled}
         />
