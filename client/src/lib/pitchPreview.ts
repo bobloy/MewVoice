@@ -15,12 +15,19 @@ function getAudioContext(): AudioContext {
   return audioContext;
 }
 
+const decodedCache = new WeakMap<Blob, AudioBuffer>();
+
 export async function playWithRandomPitch(blob: Blob): Promise<void> {
   const ctx = getAudioContext();
   if (ctx.state === 'suspended') await ctx.resume();
 
-  const arrayBuffer = await blob.arrayBuffer();
-  const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+  let audioBuffer = decodedCache.get(blob);
+
+  if (!audioBuffer) {
+    const arrayBuffer = await blob.arrayBuffer();
+    audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    decodedCache.set(blob, audioBuffer);
+  }
 
   const source = ctx.createBufferSource();
   source.buffer = audioBuffer;

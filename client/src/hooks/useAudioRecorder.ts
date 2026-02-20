@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { AUDIO_REQUIREMENTS } from '@/types/voicepack';
 
-const MAX_DURATION = AUDIO_REQUIREMENTS.maxDurationSec;
+const MAX_DURATION = AUDIO_REQUIREMENTS.recordingLimitSec;
 
 interface UseAudioRecorderReturn {
   isRecording: boolean;
