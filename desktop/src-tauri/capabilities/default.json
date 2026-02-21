@@ -7,9 +7,6 @@
     "core:default",
     "dialog:default",
     "dialog:allow-open",
-    "dialog:allow-save",
-    "fs:default",
-    "shell:default",
-    "shell:allow-open"
+    "fs:default"
   ]
 }
