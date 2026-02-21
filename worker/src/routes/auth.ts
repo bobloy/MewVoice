@@ -10,7 +10,9 @@ export const authRoutes = new Hono<{ Bindings: Env }>();
 authRoutes.get('/steam/login', async (c) => {
   const env = c.env;
 
-  if (env.DEV_STEAM_ID) {
+  // Dev bypass: only active when running locally (non-HTTPS). Setting
+  // DEV_STEAM_ID in a production Cloudflare secret has no effect.
+  if (env.DEV_STEAM_ID && !env.SITE_ORIGIN.startsWith('https://')) {
     const profile = await fetchSteamProfile(env.DEV_STEAM_ID, env.STEAM_API_KEY);
     const token = await createJwtToken(profile, env.JWT_SECRET);
     setCookie(c, COOKIE_NAME, token, {
