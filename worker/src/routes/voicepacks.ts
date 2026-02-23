@@ -120,6 +120,7 @@ voicepackRoutes.post('/build', async (c) => {
     id: buildId,
     packName,
     downloadUrl: `/api/voicepacks/${buildId}/download`,
+    tool_version: MEWVOICE_TOOL_VERSION,
   });
 });
 
