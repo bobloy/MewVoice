@@ -1,6 +1,6 @@
 [package]
 name = "mewvoice-desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = "MewVoice - Voice Pack Manager for Mewgenics"
 authors = ["MewVoice"]
 license = ""

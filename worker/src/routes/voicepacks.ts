@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { Env, PackRowWithVote } from '../types';
 import { VALID_ACTIONS, RECOMMENDED_CLIPS, packRowToMeta } from '../types';
 import { validateWav } from '../lib/wav';
-import { buildVoicePackZip, listWavFiles, extractFile } from '../lib/zip';
+import { buildVoicePackZip, listWavFiles, extractFile, MEWVOICE_TOOL_VERSION } from '../lib/zip';
 import { getCurrentUser, requireUser } from './auth';
 
 export const voicepackRoutes = new Hono<{ Bindings: Env }>();
@@ -98,6 +98,7 @@ voicepackRoutes.post('/build', async (c) => {
     build_id: buildId,
     clip_counts: clipCounts,
     created_at: new Date().toISOString(),
+    tool_version: MEWVOICE_TOOL_VERSION,
   };
 
   // Build ZIP in memory

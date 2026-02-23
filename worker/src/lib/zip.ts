@@ -4,6 +4,13 @@
 import JSZip from 'jszip';
 import { generateVoiceGon } from './gon';
 
+/**
+ * The version of MewVoice that built this pack.
+ * Updated by scripts/bump-version.js alongside the desktop app version.
+ * The desktop app uses this to verify compatibility when loading a pack.
+ */
+export const MEWVOICE_TOOL_VERSION = '0.2.0';
+
 export interface BuildMetadata {
   name: string;
   author: string;
@@ -13,6 +20,7 @@ export interface BuildMetadata {
   build_id: string;
   clip_counts: Record<string, number>;
   created_at: string;
+  tool_version: string;
 }
 
 /**
