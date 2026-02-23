@@ -34,7 +34,7 @@ jobs:
           prerelease: false
           projectPath: ./desktop
 
-      # ── Hash & AV reputation steps ──────────────────────────────────────────
+      # ── Hash (AV reputation runs in reputation.yml on release publish) ──────
 
       - name: Locate installer and compute SHA-256
         id: hash
@@ -68,45 +68,4 @@ jobs:
           $version = (Get-Content desktop/src-tauri/tauri.conf.json | ConvertFrom-Json).version
           gh release upload "MewVoice-v$version" "${{ steps.hash.outputs.sha_file }}" --clobber
 
-      - name: Submit to VirusTotal
-        if: ${{ secrets.VIRUSTOTAL_API_KEY != '' }}
-        shell: pwsh
-        env:
-          VT_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
-        run: |
-          $hash    = "${{ steps.hash.outputs.sha256 }}"
-          $headers = @{ "x-apikey" = $env:VT_API_KEY }
 
-          try {
-            # Check if this exact file hash is already in VT's database
-            $null = Invoke-RestMethod "https://www.virustotal.com/api/v3/files/$hash" -Headers $headers
-            Write-Host "Hash already known to VirusTotal — skipping upload."
-          } catch {
-            # 404 = not yet seen; upload the binary for a fresh scan
-            Write-Host "Hash not yet known — uploading installer to VirusTotal..."
-            $resp = Invoke-RestMethod "https://www.virustotal.com/api/v3/files" -Method Post `
-              -Headers $headers `
-              -Form @{ file = Get-Item "${{ steps.hash.outputs.installer_path }}" }
-            Write-Host "Queued. Analysis ID: $($resp.data.id)"
-          }
-
-          Write-Host "Results: https://www.virustotal.com/gui/file/$hash"
-
-      - name: Write job summary
-        shell: pwsh
-        run: |
-          $hash = "${{ steps.hash.outputs.sha256 }}"
-          $name = "${{ steps.hash.outputs.installer_name }}"
-          @"
-          ## Release Checksums
-
-          | File | SHA-256 |
-          |------|---------|
-          | ``$name`` | ``$hash`` |
-
-          ## AV Reputation Submissions
-
-          - **VirusTotal**: https://www.virustotal.com/gui/file/$hash
-          - **Microsoft WDSI** *(manual)*: https://www.microsoft.com/en-us/wdsi/filesubmission
-            - Submit hash ``$hash`` or upload the installer directly.
-          "@ | Out-File -Append -FilePath $env:GITHUB_STEP_SUMMARY
