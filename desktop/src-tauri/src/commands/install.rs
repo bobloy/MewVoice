@@ -26,6 +26,7 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
     let mut description = String::new();
     let mut folder_name = String::new();
     let mut clip_counts: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+    let mut pack_tool_version = String::new();
 
     // Try to find description.json or metadata_*.json
     for i in 0..archive.len() {
@@ -66,6 +67,9 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
                     if let Some(pn) = meta.get("pack_name").and_then(|v| v.as_str()) {
                         folder_name = pn.to_string();
                     }
+                    if let Some(tv) = meta.get("tool_version").and_then(|v| v.as_str()) {
+                        pack_tool_version = tv.to_string();
+                    }
                 }
             }
         }
@@ -100,6 +104,32 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
     if pack_name.is_empty() {
         pack_name = folder_name.clone();
     }
+
+    // Version compatibility check — only runs when the pack carries a tool_version
+    let compatibility_warning: Option<String> = if !pack_tool_version.is_empty() {
+        let app_ver = env!("CARGO_PKG_VERSION");
+        match (parse_semver(&pack_tool_version), parse_semver(app_ver)) {
+            (Some((pack_maj, pack_min, _)), Some((app_maj, app_min, _))) => {
+                if pack_maj > app_maj {
+                    return Err(format!(
+                        "This pack requires MewVoice v{pack_tool_version} or later. \
+                         Please update the MewVoice desktop app before installing."
+                    ));
+                } else if pack_maj == app_maj && pack_min > app_min {
+                    Some(format!(
+                        "This pack was built with MewVoice v{pack_tool_version}, which is newer \
+                         than your installed version (v{app_ver}). \
+                         It should still work, but consider updating."
+                    ))
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
+    } else {
+        None
+    };
 
     // The voice_set ID is the folder_name (this is what goes in catgen.gon)
     let voice_set_id = folder_name.clone();
@@ -140,7 +170,7 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
     }
 
     // Build result JSON matching InstalledVoicePack interface
-    let result = serde_json::json!({
+    let mut result = serde_json::json!({
         "id": voice_set_id,
         "name": pack_name,
         "folderName": folder_name,
@@ -153,7 +183,11 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
         "isBasePack": false,
         "installedAt": chrono_now(),
         "clipCounts": clip_counts,
+        "toolVersion": pack_tool_version,
     });
+    if let Some(warning) = compatibility_warning {
+        result["compatibilityWarning"] = serde_json::Value::String(warning);
+    }
 
     log::info!("Installed voice pack: {} ({})", pack_name, voice_set_id);
     Ok(result.to_string())
@@ -181,6 +215,15 @@ pub fn uninstall_pack(mod_root: String, folder_name: String) -> Result<(), Strin
 
     log::info!("Uninstalled voice pack: {}", folder_name);
     Ok(())
+}
+
+/// Parse "major.minor.patch" into a numeric triple, returning None on malformed input.
+fn parse_semver(v: &str) -> Option<(u32, u32, u32)> {
+    let mut parts = v.splitn(3, '.');
+    let maj = parts.next()?.parse().ok()?;
+    let min = parts.next()?.parse().ok()?;
+    let pat = parts.next()?.parse().ok()?;
+    Some((maj, min, pat))
 }
 
 /// Simple ISO timestamp without chrono dependency

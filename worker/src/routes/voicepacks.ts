@@ -2,13 +2,20 @@ import { Hono } from 'hono';
 import type { Env, PackRowWithVote } from '../types';
 import { VALID_ACTIONS, RECOMMENDED_CLIPS, packRowToMeta } from '../types';
 import { validateWav } from '../lib/wav';
-import { buildVoicePackZip, listWavFiles, extractFile } from '../lib/zip';
+import { buildVoicePackZip, listWavFiles, extractFile, MEWVOICE_TOOL_VERSION } from '../lib/zip';
 import { getCurrentUser, requireUser } from './auth';
 
 export const voicepackRoutes = new Hono<{ Bindings: Env }>();
 
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50 MB
+
 /** Build a voice pack from uploaded WAV clips */
 voicepackRoutes.post('/build', async (c) => {
+  const contentLength = parseInt(c.req.header('content-length') || '0');
+  if (contentLength > MAX_UPLOAD_BYTES) {
+    return c.json({ detail: 'Upload too large (max 50 MB)' }, 413);
+  }
+
   const body = await c.req.parseBody({ all: true });
 
   const name = String(body['name'] || '');
@@ -91,6 +98,7 @@ voicepackRoutes.post('/build', async (c) => {
     build_id: buildId,
     clip_counts: clipCounts,
     created_at: new Date().toISOString(),
+    tool_version: MEWVOICE_TOOL_VERSION,
   };
 
   // Build ZIP in memory
@@ -112,6 +120,7 @@ voicepackRoutes.post('/build', async (c) => {
     id: buildId,
     packName,
     downloadUrl: `/api/voicepacks/${buildId}/download`,
+    tool_version: MEWVOICE_TOOL_VERSION,
   });
 });
 
@@ -119,7 +128,14 @@ voicepackRoutes.post('/build', async (c) => {
 voicepackRoutes.get('/:buildId/download', async (c) => {
   const buildId = c.req.param('buildId');
 
-  const row = await c.env.DB.prepare('SELECT r2_key FROM packs WHERE id = ?').bind(buildId).first<{ r2_key: string }>();
+  // Restrict to unpublished builds created within the last 7 days.
+  // This prevents indefinite exposure of builds and stops the endpoint
+  // from serving published packs (which have their own download route).
+  const row = await c.env.DB.prepare(
+    `SELECT r2_key FROM packs
+     WHERE id = ? AND published = 0
+       AND created_at > datetime('now', '-7 days')`,
+  ).bind(buildId).first<{ r2_key: string }>();
   if (!row) return c.json({ detail: 'Voice pack not found' }, 404);
 
   const obj = await c.env.PACKS_BUCKET.get(row.r2_key);
@@ -195,9 +211,11 @@ voicepackRoutes.get('/', async (c) => {
 
   const offset = Math.max(0, parseInt(c.req.query('offset') || '0') || 0);
   const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') || '20') || 20));
-  const sort = c.req.query('sort') || 'newest';
+  const sortRaw = c.req.query('sort') || 'newest';
+  const sort = sortRaw === 'top' ? 'top' : 'newest';
   const q = (c.req.query('q') || '').slice(0, 100);
-  const gender = c.req.query('gender') || 'all';
+  const genderRaw = c.req.query('gender') || 'all';
+  const gender = ['male', 'female', 'all'].includes(genderRaw) ? genderRaw : 'all';
   const minScore = parseInt(c.req.query('minScore') || '0') || 0;
   const hasRecommended = c.req.query('hasRecommended') === 'true';
   const authorFilter = c.req.query('author') || '';

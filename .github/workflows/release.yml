@@ -19,7 +19,9 @@ jobs:
       - name: install frontend dependencies
         run: npm install
         working-directory: ./desktop
-      - uses: tauri-apps/tauri-action@v0
+      - name: build and publish release
+        id: tauri
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -31,3 +33,39 @@ jobs:
           releaseDraft: true
           prerelease: false
           projectPath: ./desktop
+
+      # ── Hash (AV reputation runs in reputation.yml on release publish) ──────
+
+      - name: Locate installer and compute SHA-256
+        id: hash
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse "desktop/src-tauri/target/release/bundle/nsis" `
+                   -Filter "*-setup.exe" -ErrorAction SilentlyContinue |
+                 Select-Object -First 1
+          if (-not $exe) {
+            Write-Warning "NSIS installer not found, falling back to MSI"
+            $exe = Get-ChildItem -Recurse "desktop/src-tauri/target/release/bundle/msi" `
+                     -Filter "*.msi" -ErrorAction SilentlyContinue |
+                   Select-Object -First 1
+          }
+          if (-not $exe) { Write-Error "No installer artifact found"; exit 1 }
+
+          $hash    = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower()
+          $shaFile = Join-Path $env:RUNNER_TEMP "$($exe.BaseName).sha256"
+          "$hash  $($exe.Name)" | Out-File -FilePath $shaFile -Encoding ASCII
+
+          "sha256=$hash"                  | Out-File -Append $env:GITHUB_OUTPUT
+          "installer_path=$($exe.FullName)" | Out-File -Append $env:GITHUB_OUTPUT
+          "sha_file=$shaFile"             | Out-File -Append $env:GITHUB_OUTPUT
+          "installer_name=$($exe.Name)"  | Out-File -Append $env:GITHUB_OUTPUT
+
+      - name: Upload SHA-256 checksum to release
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content desktop/src-tauri/tauri.conf.json | ConvertFrom-Json).version
+          gh release upload "MewVoice-v$version" "${{ steps.hash.outputs.sha_file }}" --clobber
+
+
