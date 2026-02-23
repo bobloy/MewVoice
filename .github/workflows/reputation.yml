@@ -3,6 +3,8 @@ on:
   release:
     types: [published]
 
+# Only runs when a draft is promoted to a real release, so every submission
+# corresponds to a binary that was actually shipped.
 jobs:
   av-submission:
     runs-on: ubuntu-latest
@@ -21,6 +23,7 @@ jobs:
 
           sha_file=$(find "$RUNNER_TEMP" -name "*.sha256" | head -1)
           content=$(cat "$sha_file")
+          # File format written by release.yml: "<hash>  <filename>"
           hash=$(awk '{print $1}' <<< "$content")
           name=$(awk '{print $2}' <<< "$content")
 
@@ -55,7 +58,6 @@ jobs:
               -H "x-apikey: $VT_API_KEY" \
               -F "file=@$RUNNER_TEMP/$name" \
               "https://www.virustotal.com/api/v3/files" \
-
               | jq -r '.data.id')
             echo "Queued. Analysis ID: $analysis_id"
           fi
@@ -66,9 +68,9 @@ jobs:
         run: |
           hash="${{ steps.hash.outputs.sha256 }}"
           name="${{ steps.hash.outputs.installer_name }}"
+          tag="${{ github.event.release.tag_name }}"
           cat >> "$GITHUB_STEP_SUMMARY" << EOF
           ## Release Checksums
-
 
           | File | SHA-256 |
           |------|---------|
@@ -78,4 +80,5 @@ jobs:
 
           - **VirusTotal**: https://www.virustotal.com/gui/file/$hash
           - **Microsoft WDSI** *(manual)*: https://www.microsoft.com/en-us/wdsi/filesubmission
+            - Submit hash \`$hash\` or upload the installer directly.
           EOF
