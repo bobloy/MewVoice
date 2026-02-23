@@ -31,10 +31,11 @@ jobs:
           echo "installer_name=$name" >> "$GITHUB_OUTPUT"
 
       - name: Submit to VirusTotal
-        if: secrets.VIRUSTOTAL_API_KEY != ''
+        # Fix: Map the secret to env first, then check env in the 'if'
         env:
           VT_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: env.VT_API_KEY != ''
         run: |
           hash="${{ steps.hash.outputs.sha256 }}"
           name="${{ steps.hash.outputs.installer_name }}"
