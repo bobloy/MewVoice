@@ -11,6 +11,7 @@ function isTauri(): boolean {
 
 /**
  * Lazy-import invoke to avoid crashing when Tauri isn't available.
+ * TODO: Handle Tauri invoke errors gracefully (e.g., wrap in a Try/Catch and surface typed error results) instead of relying on uncaught promise rejections.
  */
 async function tauriInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   const { invoke } = await import('@tauri-apps/api/core');

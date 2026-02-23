@@ -87,6 +87,7 @@ export async function listWavFiles(zipData: ArrayBuffer, actionFilter?: string):
 
 /**
  * Extract a single file from a ZIP.
+ * TODO: Consider migrating to a streaming ZIP parser if pack sizes increase, to reduce memory pressure in the Cloudflare Worker.
  */
 export async function extractFile(zipData: ArrayBuffer, filePath: string): Promise<ArrayBuffer> {
   const zip = await JSZip.loadAsync(zipData);

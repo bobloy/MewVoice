@@ -39,6 +39,7 @@ export function validateWav(data: ArrayBuffer): WavInfo {
     throw new Error('Invalid WAV (missing fmt chunk)');
   }
 
+  // TODO: Add better support or explicit error messages for Float PCM (format 3) or other non-standard encodings to guide the user.
   const audioFormat = view.getUint16(20, true);
   if (audioFormat !== 1) {
     throw new Error(`Invalid WAV format (expected PCM=1, got ${audioFormat})`);

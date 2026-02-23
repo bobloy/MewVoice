@@ -44,11 +44,10 @@ export default function VoiceRegistrationPanel({
         <button
           onClick={onRegenerate}
           disabled={!patchDirty && enabledPacks.length > 0}
-          className={`px-4 py-2 text-sm rounded transition-colors ${
-            patchDirty
+          className={`px-4 py-2 text-sm rounded transition-colors ${patchDirty
               ? 'bg-mew-accent text-white hover:bg-mew-accent/80'
               : 'bg-mew-surface border border-mew-highlight/50 text-mew-muted'
-          }`}
+            }`}
         >
           {patchDirty ? 'Regenerate Voice Patch' : 'Patch Up to Date'}
         </button>
@@ -62,6 +61,7 @@ export default function VoiceRegistrationPanel({
       )}
 
       {/* Spawn distribution table */}
+      {/* TODO: Allow manual editing of frequency multipliers directly in the UI instead of relying only on default pack values. */}
       {enabledPacks.length > 0 ? (
         <div className="mb-6">
           <h3 className="text-sm font-medium text-mew-muted mb-3">Spawn Distribution</h3>

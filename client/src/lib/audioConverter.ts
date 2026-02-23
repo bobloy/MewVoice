@@ -66,6 +66,7 @@ export async function convertToGameWav(blob: Blob, volumeAdjustmentDb: number = 
   // Get samples
   let samples = rendered.getChannelData(0);
 
+  // TODO: Replace pure Peak Normalization with LUFS (Loudness Units relative to Full Scale) normalization for more consistent perceived loudness across different recordings.
   // 1. Normalize based on PEAK + Adjustment
   // Base target is -20dB. Adjustment shifts this up or down.
   const targetPeakDbfs = TARGET_DBFS + volumeAdjustmentDb;
@@ -87,7 +88,7 @@ export async function convertToGameWav(blob: Blob, volumeAdjustmentDb: number = 
 /**
  * Normalize audio samples to a target Peak dBFS level.
  */
-function normalizeToPeak(samples: Float32Array, targetDbfs: number): Float32Array {
+function normalizeToPeak(samples: Float32Array<any>, targetDbfs: number): Float32Array<any> {
   // Find current peak
   let maxVal = 0;
   for (let i = 0; i < samples.length; i++) {
@@ -114,7 +115,7 @@ function normalizeToPeak(samples: Float32Array, targetDbfs: number): Float32Arra
 /**
  * Encode Float32 samples as a 16-bit PCM WAV file.
  */
-export function encodeWav(samples: Float32Array, sampleRate: number): Blob {
+export function encodeWav(samples: Float32Array<any>, sampleRate: number): Blob {
   const numChannels = 1;
   const bitsPerSample = 16;
   const bytesPerSample = bitsPerSample / 8;
@@ -146,7 +147,7 @@ export function encodeWav(samples: Float32Array, sampleRate: number): Blob {
   let offset = 44;
   for (let i = 0; i < samples.length; i++) {
     const s = Math.max(-1, Math.min(1, samples[i]));
-    // Dithering could be added here for extra quality, but rounding is ok for now
+    // TODO: Add dithering for extra quality instead of simple rounding, especially since we are down-converting to 16-bit.
     const val = s < 0 ? s * 0x8000 : s * 0x7FFF;
     view.setInt16(offset, val, true);
     offset += 2;

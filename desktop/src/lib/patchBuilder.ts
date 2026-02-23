@@ -38,6 +38,7 @@ export function buildVoicePatch(
     lines.push(`    ${p.id} ${p.frequency}`);
   }
 
+  // TODO: Consider reading any existing catgen.gon.patch and merging lines instead of overwriting, to preserve other mod changes if they exist.
   return `voice_sets.append {\n${lines.join('\n')}\n}\n`;
 }
 
