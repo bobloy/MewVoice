@@ -101,9 +101,25 @@ if (updatedZipTs === zipTs) {
 writeFileSync(zipTsPath, updatedZipTs);
 console.log(`zip.ts TOOL_VERSION:   ${oldVersion} → ${newVersion}`);
 
+// ── 5. desktop/src/lib/version.ts ───────────────────────────────────────────
+const versionTsPath = resolve(root, 'desktop/src/lib/version.ts');
+const versionTs = readFileSync(versionTsPath, 'utf8');
+const updatedVersionTs = versionTs.replace(
+  /^(export const APP_VERSION\s*=\s*)'[\d.]+'(;)/m,
+  `$1'${newVersion}'$2`,
+);
+if (updatedVersionTs === versionTs) {
+  console.error('version.ts: could not find APP_VERSION — check the file manually.');
+  process.exit(1);
+}
+writeFileSync(versionTsPath, updatedVersionTs);
+console.log(`version.ts APP_VERSION:  ${oldVersion} → ${newVersion}`);
+
 console.log(`\nDone. Stage and commit these files, then push to trigger a release build:\n`);
 console.log(`  git add desktop/src-tauri/tauri.conf.json`);
 console.log(`  git add desktop/src-tauri/Cargo.toml`);
 console.log(`  git add desktop/package.json`);
 console.log(`  git add worker/src/lib/zip.ts`);
+console.log(`  git add desktop/src/lib/version.ts`);
 console.log(`  git commit -m "chore: bump version to ${newVersion}"`);
+

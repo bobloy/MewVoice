@@ -13,6 +13,8 @@ const NAV_ITEMS: { id: Panel; label: string; icon: string }[] = [
   { id: 'settings', label: 'Settings', icon: '\u{2699}\u{FE0F}' },
 ];
 
+import { APP_VERSION } from '@/lib/version';
+
 export default function Sidebar({ activePanel, onNavigate, patchDirty }: SidebarProps) {
   return (
     <nav className="w-52 min-h-screen bg-mew-surface border-r border-mew-highlight/30 flex flex-col">
@@ -26,11 +28,10 @@ export default function Sidebar({ activePanel, onNavigate, patchDirty }: Sidebar
           <button
             key={item.id}
             onClick={() => onNavigate(item.id)}
-            className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2.5 transition-colors ${
-              activePanel === item.id
+            className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2.5 transition-colors ${activePanel === item.id
                 ? 'bg-mew-highlight/40 text-mew-text'
                 : 'text-mew-muted hover:bg-mew-highlight/20 hover:text-mew-text'
-            }`}
+              }`}
           >
             <span className="text-base">{item.icon}</span>
             <span>{item.label}</span>
@@ -42,7 +43,7 @@ export default function Sidebar({ activePanel, onNavigate, patchDirty }: Sidebar
       </div>
 
       <div className="p-4 border-t border-mew-highlight/30">
-        <p className="text-xs text-mew-muted/60">v0.1.0</p>
+        <p className="text-xs text-mew-muted/60">v{APP_VERSION}</p>
       </div>
     </nav>
   );

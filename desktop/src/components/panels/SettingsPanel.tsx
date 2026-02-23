@@ -1,4 +1,8 @@
 import * as cmd from '@/lib/commands';
+import { APP_VERSION } from '@/lib/version';
+import { useState } from 'react';
+import { check } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
 
 interface SettingsPanelProps {
   modRoot: string | null;
@@ -15,6 +19,51 @@ export default function SettingsPanel({
   onSetAutoSync,
   onScan,
 }: SettingsPanelProps) {
+  const [updateStatus, setUpdateStatus] = useState<string>('');
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleCheckUpdate = async () => {
+    try {
+      setIsUpdating(true);
+      setUpdateStatus('Checking for updates...');
+      const update = await check();
+
+      if (update) {
+        setUpdateStatus(`Found version ${update.version}. Downloading...`);
+        let downloaded = 0;
+        let contentLength = 0;
+
+        await update.downloadAndInstall((event) => {
+          switch (event.event) {
+            case 'Started':
+              contentLength = event.data.contentLength || 0;
+              setUpdateStatus(`Downloading (0%)...`);
+              break;
+            case 'Progress':
+              downloaded += event.data.chunkLength;
+              if (contentLength > 0) {
+                const percent = Math.round((downloaded / contentLength) * 100);
+                setUpdateStatus(`Downloading (${percent}%)...`);
+              }
+              break;
+            case 'Finished':
+              setUpdateStatus('Installing update...');
+              break;
+          }
+        });
+
+        setUpdateStatus('Update installed. Restarting...');
+        await relaunch();
+      } else {
+        setUpdateStatus('App is up to date.');
+      }
+    } catch (err) {
+      console.error('Update failed:', err);
+      setUpdateStatus('Failed to check for updates.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
   const handleBrowse = async () => {
     const selected = await cmd.pickFolder();
     if (selected) {
@@ -77,14 +126,12 @@ export default function SettingsPanel({
           </div>
           <button
             onClick={() => onSetAutoSync(!autoSync)}
-            className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 ${
-              autoSync ? 'bg-mew-accent' : 'bg-mew-highlight'
-            }`}
+            className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 ${autoSync ? 'bg-mew-accent' : 'bg-mew-highlight'
+              }`}
           >
             <span
-              className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                autoSync ? 'left-5' : 'left-0.5'
-              }`}
+              className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${autoSync ? 'left-5' : 'left-0.5'
+                }`}
             />
           </button>
         </div>
@@ -94,12 +141,28 @@ export default function SettingsPanel({
       <div className="pt-6 border-t border-mew-highlight/30">
         <h3 className="text-sm font-medium text-mew-muted mb-2">About</h3>
         <p className="text-xs text-mew-muted/60">
-          MewVoice Desktop v0.1.0 — Voice Pack Manager for Mewgenics.
+          MewVoice Desktop v{APP_VERSION} — Voice Pack Manager for Mewgenics.
         </p>
-        <p className="text-xs text-mew-muted/60 mt-1">
+        <p className="text-xs text-mew-muted/60 mt-1 mb-4">
           This app generates a merged catgen.gon.patch inside the MewVoice mod folder.
           It never modifies base game files.
         </p>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleCheckUpdate}
+            disabled={isUpdating}
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${isUpdating
+                ? 'bg-mew-highlight/50 text-mew-muted cursor-not-allowed'
+                : 'bg-mew-surface border border-mew-highlight/50 text-mew-text hover:bg-mew-highlight/30'
+              }`}
+          >
+            {isUpdating ? 'Checking...' : 'Check for Updates'}
+          </button>
+          {updateStatus && (
+            <span className="text-xs text-mew-accent">{updateStatus}</span>
+          )}
+        </div>
       </div>
     </div>
   );
