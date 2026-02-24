@@ -8,6 +8,7 @@ interface VoiceRegistrationPanelProps {
   modRoot: string | null;
   patchDirty: boolean;
   onRegenerate: () => void;
+  onSetFrequency: (packId: string, freq: number) => void;
 }
 
 export default function VoiceRegistrationPanel({
@@ -16,6 +17,7 @@ export default function VoiceRegistrationPanel({
   modRoot,
   patchDirty,
   onRegenerate,
+  onSetFrequency,
 }: VoiceRegistrationPanelProps) {
   const enabledPacks = packs.filter((p) => p.isEnabled);
   const patchContent = useMemo(() => buildVoicePatch(packs, mutedBasePacks), [packs, mutedBasePacks]);
@@ -44,11 +46,10 @@ export default function VoiceRegistrationPanel({
         <button
           onClick={onRegenerate}
           disabled={!patchDirty && enabledPacks.length > 0}
-          className={`px-4 py-2 text-sm rounded transition-colors ${
-            patchDirty
+          className={`px-4 py-2 text-sm rounded transition-colors ${patchDirty
               ? 'bg-mew-accent text-white hover:bg-mew-accent/80'
               : 'bg-mew-surface border border-mew-highlight/50 text-mew-muted'
-          }`}
+            }`}
         >
           {patchDirty ? 'Regenerate Voice Patch' : 'Patch Up to Date'}
         </button>
@@ -81,9 +82,18 @@ export default function VoiceRegistrationPanel({
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-xs text-mew-muted w-16 text-right tabular-nums">
-                      {pct.toFixed(1)}% (x{pack.frequency})
+                    <span className="text-xs text-mew-muted w-10 text-right tabular-nums">
+                      {pct.toFixed(1)}%
                     </span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={99}
+                      value={pack.frequency}
+                      onChange={(e) => onSetFrequency(pack.id, parseInt(e.target.value) || 0)}
+                      className="w-12 px-1.5 py-0.5 text-xs text-center bg-mew-bg border border-mew-highlight/50 rounded tabular-nums"
+                      title="Spawn weight"
+                    />
                   </div>
                 );
               })}

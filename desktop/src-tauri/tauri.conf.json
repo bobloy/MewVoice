@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "MewVoice",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "identifier": "com.mewvoice.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -40,7 +40,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/Mewgenics/MewVoice/releases/latest"
+        "https://github.com/bobloy/MewVoice/releases/latest/download/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERGRTU5OEI4NUZCMENEODMKUldTRHpiQmZ1SmpsMzZ3MkVNR25KOStVUWZ5c3NnSG16M3djV253YXArdVNjM2ZBZ29taW1DQjYK"
     }

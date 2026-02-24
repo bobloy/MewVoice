@@ -88,6 +88,7 @@ export function PackBuilder() {
       const clipToMove = prev.clips[fromAction].find(c => c.id === clipId);
       if (!clipToMove) return prev;
 
+      // TODO: Re-validate the clip against the new target action's requirements (e.g. duration limits)
       // Update action in clip object
       const movedClip = { ...clipToMove, action: toAction };
 
@@ -130,6 +131,8 @@ export function PackBuilder() {
 
     setErrorMsg('');
 
+    // TODO: Consider offloading this conversion phase to a Web Worker 
+    // to prevent blocking the main thread during large pack builds.
     // Phase 1: Convert all clips to WAV client-side
     setBuildStatus('converting');
     const allClips: { action: VoiceAction; clip: AudioClip }[] = [];

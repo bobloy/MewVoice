@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 type Page = 'create' | 'browse' | 'instructions';
 
+// TODO: Replace simple state-based routing with a proper router (e.g., react-router-dom) to support deep linking and browser history.
 function App() {
   const [page, setPage] = useState<Page>('create');
   const { user, loading, login, logout } = useAuth();
@@ -26,25 +27,22 @@ function App() {
             <nav className="flex gap-4">
               <button
                 onClick={() => setPage('create')}
-                className={`font-medium text-sm transition-colors ${
-                  page === 'create' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
-                }`}
+                className={`font-medium text-sm transition-colors ${page === 'create' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
+                  }`}
               >
                 Create
               </button>
               <button
                 onClick={() => setPage('browse')}
-                className={`font-medium text-sm transition-colors ${
-                  page === 'browse' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
-                }`}
+                className={`font-medium text-sm transition-colors ${page === 'browse' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
+                  }`}
               >
                 Browse Packs
               </button>
               <button
                 onClick={() => setPage('instructions')}
-                className={`font-medium text-sm transition-colors ${
-                  page === 'instructions' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
-                }`}
+                className={`font-medium text-sm transition-colors ${page === 'instructions' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
+                  }`}
               >
                 Instructions
               </button>

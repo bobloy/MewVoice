@@ -9,7 +9,7 @@ import { generateVoiceGon } from './gon';
  * Updated by scripts/bump-version.js alongside the desktop app version.
  * The desktop app uses this to verify compatibility when loading a pack.
  */
-export const MEWVOICE_TOOL_VERSION = '0.2.0';
+export const MEWVOICE_TOOL_VERSION = '0.2.1';
 
 export interface BuildMetadata {
   name: string;
@@ -87,6 +87,7 @@ export async function listWavFiles(zipData: ArrayBuffer, actionFilter?: string):
 
 /**
  * Extract a single file from a ZIP.
+ * TODO: Consider migrating to a streaming ZIP parser if pack sizes increase, to reduce memory pressure in the Cloudflare Worker.
  */
 export async function extractFile(zipData: ArrayBuffer, filePath: string): Promise<ArrayBuffer> {
   const zip = await JSZip.loadAsync(zipData);

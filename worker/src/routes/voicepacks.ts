@@ -164,6 +164,7 @@ voicepackRoutes.post('/:buildId/publish', async (c) => {
   if (!row) return c.json({ detail: 'Build not found' }, 404);
 
   // Copy from builds/ to library/ in R2
+  // TODO: Use R2's native copy feature if/when available, or stream the data instead of buffering the entire ZIP into worker memory.
   const buildObj = await c.env.PACKS_BUCKET.get(row.r2_key);
   if (!buildObj) return c.json({ detail: 'Build not found in storage' }, 404);
   const zipData = await buildObj.arrayBuffer();
@@ -253,6 +254,7 @@ voicepackRoutes.get('/', async (c) => {
   const total = countResult?.total || 0;
 
   // Fetch page with optional user vote join
+  // TODO: Consider keyset/cursor-based pagination instead of OFFSET for better performance as the library grows.
   const steamId = user?.steam_id || '';
   const query = `
     SELECT p.*, v.vote as user_vote
@@ -291,6 +293,7 @@ voicepackRoutes.get('/', async (c) => {
   });
 
   // Cache anonymous responses for 1 minute
+  // TODO: Make this TTL configurable via environment variables.
   if (!user) {
     response.headers.set('Cache-Control', 'public, max-age=60');
     c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));

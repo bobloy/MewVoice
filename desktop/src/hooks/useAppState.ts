@@ -153,6 +153,7 @@ export function useAppState() {
       const packs = await cmd.scanInstalledPacks(state.mewtatorModRoot);
       setState((s) => {
         // Merge scanned packs: keep existing state for known packs, add new ones
+        // TODO: Also handle packs that were deleted from disk - currently only adds/updates, never removes
         const existing = new Map(s.packs.map((p) => [p.id, p]));
         const merged = packs.map((scanned) => {
           const prev = existing.get(scanned.id);

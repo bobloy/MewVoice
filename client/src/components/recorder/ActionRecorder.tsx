@@ -176,6 +176,7 @@ export function ActionRecorder({ action, clips, normalClips, onAddClip, onRemove
                   ➔
                 </button>
 
+                {/* TODO: Replace this custom inline dropdown menu with a proper generic Popover component for better accessibility and focus management */}
                 {isMoveMenuOpen === clip.id && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsMoveMenuOpen(null)} />
@@ -310,6 +311,8 @@ export function ActionRecorder({ action, clips, normalClips, onAddClip, onRemove
 /**
  * Shows which Normal clips will be used as sing fallback, ranked by suitability.
  *
+ * TODO: Move this component to its own file or an isolated fallback module to reduce ActionRecorder complexity.
+ *
  * Selection logic: shorter Normal clips are better for singing because the game
  * repeats them rapidly at different pitches. We rank by duration (ascending) and
  * highlight the first Normal clip since that's what the GON fallback actually uses.
@@ -342,11 +345,10 @@ function SingFallbackDisplay({
           return (
             <div
               key={clip.id}
-              className={`flex items-center gap-2 p-1.5 rounded text-xs ${
-                isFallback
+              className={`flex items-center gap-2 p-1.5 rounded text-xs ${isFallback
                   ? 'bg-amber-900/30 border border-amber-700/40'
                   : 'bg-mew-bg/30'
-              }`}
+                }`}
             >
               <span className="text-mew-muted w-10 flex-shrink-0">
                 N#{originalIndex + 1}

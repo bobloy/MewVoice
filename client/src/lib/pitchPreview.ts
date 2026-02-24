@@ -34,6 +34,7 @@ export async function playWithRandomPitch(blob: Blob): Promise<void> {
 
   // Random pitch: ±5 semitones ≈ playbackRate between 0.75 and 1.33
   const semitones = (Math.random() - 0.5) * 10; // -5 to +5
+  // TODO: Let this preview component accept limits or configuration (e.g., config for max random semitones).
   source.playbackRate.value = Math.pow(2, semitones / 12);
 
   source.connect(ctx.destination);

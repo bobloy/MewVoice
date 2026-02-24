@@ -9,6 +9,7 @@ interface TrimModalProps {
 }
 
 // Helper to find silence range
+// TODO: Consider making the hardcoded -45dB threshold configurable or adapt it based on the noise floor dynamically.
 function getSilenceRange(buffer: AudioBuffer, thresholdDb: number = -45): { start: number; end: number } {
   const data = buffer.getChannelData(0);
   const thresh = Math.pow(10, thresholdDb / 20);
@@ -196,6 +197,7 @@ export function TrimModal({ clip, onSave, onClose }: TrimModalProps) {
       // This file manages the "editing".
 
       // Let's add the import and use it.
+      // TODO: Refactor this dynamic import. If the bundle size isn't a huge issue, just include it as a standard top-level import to avoid runtime delays during save.
       const { convertToGameWav } = await import('@/lib/audioConverter');
       const { wavBlob } = await convertToGameWav(trimmedBlob, volumeDb);
 
