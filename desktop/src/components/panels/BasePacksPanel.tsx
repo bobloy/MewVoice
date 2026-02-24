@@ -266,7 +266,7 @@ export default function BasePacksPanel({
               <button
                 onClick={() => onToggleMute(pack.id)}
                 className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 ${
-                  !isMuted ? 'bg-mew-accent' : 'bg-mew-highlight'
+                  !isMuted ? 'bg-mew-accent' : 'bg-mew-surface'
                 }`}
               >
                 <span

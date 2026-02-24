@@ -146,12 +146,12 @@ function PackRow({
       }`}
     >
       {/* Toggle */}
-      <button
-        onClick={onToggle}
-        className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 mt-1 ${
-          pack.isEnabled ? 'bg-mew-accent' : 'bg-mew-highlight'
-        }`}
-      >
+        <button
+          onClick={onToggle}
+          className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 mt-1 ${
+            pack.isEnabled ? 'bg-mew-accent' : 'bg-mew-surface'
+          }`}
+        >
         <span
           className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
             pack.isEnabled ? 'left-5' : 'left-0.5'

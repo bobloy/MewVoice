@@ -27,6 +27,9 @@ jobs:
           hash=$(awk '{print $1}' <<< "$content")
           name=$(awk '{print $2}' <<< "$content")
 
+          # Trim any trailing whitespace/newlines from the filename
+          name=$(echo "$name" | tr -d '[:space:]')
+
           echo "sha256=$hash"        >> "$GITHUB_OUTPUT"
           echo "installer_name=$name" >> "$GITHUB_OUTPUT"
 

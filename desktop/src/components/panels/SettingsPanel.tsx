@@ -94,7 +94,7 @@ export default function SettingsPanel({
           Mewtator Mod Root
         </label>
         <p className="text-xs text-mew-muted/60 mb-3">
-          The root mods directory for Mewgenics (e.g., .../Mewgenics/mods/).
+          The root mods directory for Mewtator (e.g., .../Mewtator/mods/).
           The app writes to a MewVoice subfolder inside this.
         </p>
         <div className="flex gap-2 mb-2">
@@ -138,7 +138,7 @@ export default function SettingsPanel({
           </div>
           <button
             onClick={() => onSetAutoSync(!autoSync)}
-            className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 ${autoSync ? 'bg-mew-accent' : 'bg-mew-highlight'
+            className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 ${autoSync ? 'bg-mew-accent' : 'bg-mew-surface'
               }`}
           >
             <span
