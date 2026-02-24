@@ -138,7 +138,7 @@ export default function SettingsPanel({
           </div>
           <button
             onClick={() => onSetAutoSync(!autoSync)}
-            className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 ${autoSync ? 'bg-mew-accent' : 'bg-mew-highlight'
+            className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 ${autoSync ? 'bg-mew-accent' : 'bg-mew-surface'
               }`}
           >
             <span
