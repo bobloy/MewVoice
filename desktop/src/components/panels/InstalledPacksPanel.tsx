@@ -41,6 +41,23 @@ export default function InstalledPacksPanel({
     }
   };
 
+  const handleOpenMewVoice = async () => {
+    try {
+      if ('__TAURI_INTERNALS__' in window) {
+        // Use Tauri opener plugin to open external link
+        const { openUrl } = await import('@tauri-apps/plugin-opener');
+        await openUrl('https://mewvoice.com');
+      } else {
+        window.open('https://mewvoice.com', '_blank', 'noopener,noreferrer');
+      }
+    } catch (e) {
+      console.error('Failed to open MewVoice:', e);
+      // Fallback to regular link behavior
+      window.open('https://mewvoice.com', '_blank', 'noopener,noreferrer');
+    }
+  };
+
+
   if (!modRoot) {
     return (
       <div className="text-center py-12">
@@ -67,14 +84,12 @@ export default function InstalledPacksPanel({
           </p>
         </div>
         <div className="flex gap-2">
-          <a
-            href="https://mewvoice.com"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={handleOpenMewVoice}
             className="px-3 py-1.5 text-sm bg-mew-surface border border-mew-highlight/50 rounded hover:bg-mew-highlight/30 transition-colors"
           >
             Download More Voices
-          </a>
+          </button>
           <button
             onClick={onScan}
             className="px-3 py-1.5 text-sm bg-mew-surface border border-mew-highlight/50 rounded hover:bg-mew-highlight/30 transition-colors"
@@ -96,14 +111,12 @@ export default function InstalledPacksPanel({
           <p className="text-sm text-mew-muted/60 mt-1">
             Import a .zip from MewVoice or click "Rescan Folder" to detect existing packs.
           </p>
-          <a
-            href="https://mewvoice.com"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={handleOpenMewVoice}
             className="inline-block mt-4 px-4 py-2 text-sm bg-mew-accent text-white rounded hover:bg-mew-accent/80 transition-colors"
           >
             Download More Voices
-          </a>
+          </button>
         </div>
       ) : (
         <div className="space-y-2">
@@ -146,12 +159,12 @@ function PackRow({
       }`}
     >
       {/* Toggle */}
-        <button
-          onClick={onToggle}
-          className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 mt-1 ${
-            pack.isEnabled ? 'bg-mew-accent' : 'bg-mew-surface'
-          }`}
-        >
+      <button
+        onClick={onToggle}
+        className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 mt-1 ${
+          pack.isEnabled ? 'bg-mew-accent' : 'bg-mew-surface'
+        }`}
+      >
         <span
           className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
             pack.isEnabled ? 'left-5' : 'left-0.5'
