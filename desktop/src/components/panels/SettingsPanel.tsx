@@ -1,8 +1,6 @@
 import * as cmd from '@/lib/commands';
 import { APP_VERSION } from '@/lib/version';
 import { useState } from 'react';
-import { check } from '@tauri-apps/plugin-updater';
-import { relaunch } from '@tauri-apps/plugin-process';
 
 interface SettingsPanelProps {
   modRoot: string | null;
@@ -24,9 +22,20 @@ export default function SettingsPanel({
   // TODO: Add updateError state to show specific error messages to users instead of generic "Failed to check for updates"
 
   const handleCheckUpdate = async () => {
+    // Check if running in Tauri (not plain browser)
+    if (!('__TAURI_INTERNALS__' in window)) {
+      setUpdateStatus('Updates require the desktop app');
+      return;
+    }
+
     try {
       setIsUpdating(true);
       setUpdateStatus('Checking for updates...');
+
+      // Lazy-load Tauri plugins to avoid issues in browser mode
+      const { check } = await import('@tauri-apps/plugin-updater');
+      const { relaunch } = await import('@tauri-apps/plugin-process');
+
       const update = await check();
 
       if (update) {
