@@ -16,35 +16,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # List all assets to find the .sha256 file
-          assets=$(gh release view "${{ github.event.release.tag_name }}" \
-            --repo "${{ github.repository }}" \
-            --json assets -q '.assets[].name')
-          
-          sha_file=""
-          for asset in $assets; do
-            if [[ "$asset" == *.sha256 ]]; then
-              sha_file="$asset"
-              break
-            fi
-          done
-          
-          if [ -z "$sha_file" ]; then
-            echo "No .sha256 file found in release assets"
-            exit 1
-          fi
-          
-          # Download the specific file
           gh release download "${{ github.event.release.tag_name }}" \
             --repo "${{ github.repository }}" \
-            --pattern "$sha_file" \
+            --pattern "*.sha256" \
             --dir "$RUNNER_TEMP"
-          
-          content=$(cat "$RUNNER_TEMP/$sha_file")
+
+          sha_file=$(find "$RUNNER_TEMP" -name "*.sha256" | head -1)
+          content=$(cat "$sha_file")
+          # File format written by release.yml: "<hash>  <filename>"
           hash=$(awk '{print $1}' <<< "$content")
           name=$(awk '{print $2}' <<< "$content")
-          
-          echo "sha256=$hash" >> "$GITHUB_OUTPUT"
+
+          # Trim any trailing whitespace/newlines from the filename
+          name=$(echo "$name" | tr -d '[:space:]')
+
+          echo "sha256=$hash"        >> "$GITHUB_OUTPUT"
           echo "installer_name=$name" >> "$GITHUB_OUTPUT"
 
       - name: Submit to VirusTotal
