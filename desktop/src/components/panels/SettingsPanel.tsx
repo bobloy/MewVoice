@@ -94,7 +94,7 @@ export default function SettingsPanel({
           Mewtator Mod Root
         </label>
         <p className="text-xs text-mew-muted/60 mb-3">
-          The root mods directory for Mewgenics (e.g., .../Mewgenics/mods/).
+          The root mods directory for Mewtator (e.g., .../Mewtator/mods/).
           The app writes to a MewVoice subfolder inside this.
         </p>
         <div className="flex gap-2 mb-2">

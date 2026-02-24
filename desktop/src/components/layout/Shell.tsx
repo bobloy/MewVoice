@@ -40,8 +40,10 @@ export default function Shell({
           </div>
         )}
 
-        <div className="flex-1 p-6 overflow-y-auto">
-          {children}
+        <div className="flex-1 p-6">
+          <div className="h-full overflow-y-auto">
+            {children}
+          </div>
         </div>
       </main>
     </div>
