@@ -21,6 +21,7 @@ export default function SettingsPanel({
 }: SettingsPanelProps) {
   const [updateStatus, setUpdateStatus] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
+  // TODO: Add updateError state to show specific error messages to users instead of generic "Failed to check for updates"
 
   const handleCheckUpdate = async () => {
     try {
@@ -29,6 +30,7 @@ export default function SettingsPanel({
       const update = await check();
 
       if (update) {
+        // TODO: Consider adding a "Skip" button to cancel download mid-progress
         setUpdateStatus(`Found version ${update.version}. Downloading...`);
         let downloaded = 0;
         let contentLength = 0;
@@ -59,6 +61,7 @@ export default function SettingsPanel({
       }
     } catch (err) {
       console.error('Update failed:', err);
+      // TODO: Display specific error message (network error, no update endpoint, etc.) instead of generic failure
       setUpdateStatus('Failed to check for updates.');
     } finally {
       setIsUpdating(false);

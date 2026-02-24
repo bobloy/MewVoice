@@ -76,6 +76,7 @@ pub fn scan_installed_packs(mod_root: String) -> Result<String, String> {
 }
 
 /// Count WAV files in a voice pack directory, grouped by action prefix.
+// TODO: Support more audio formats beyond WAV (e.g., OGG, MP3) - currently only .wav files are counted
 fn count_clips(audio_dir: &PathBuf) -> serde_json::Map<String, serde_json::Value> {
     let mut counts: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
     let actions = [

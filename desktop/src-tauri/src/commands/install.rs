@@ -76,6 +76,7 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
     }
 
     // If no folder_name from metadata, try to infer from .gon files in the archive
+    // TODO: Refactor to reuse the same archive instead of reopening (currently opens archive twice)
     if folder_name.is_empty() {
         let mut archive2 = zip::ZipArchive::new(
             fs::File::open(&zip_path).map_err(|e| e.to_string())?
@@ -135,6 +136,7 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
     let voice_set_id = folder_name.clone();
 
     // Second pass: extract audio files and .gon
+    // TODO: Refactor to reuse the same archive instead of reopening (currently opens archive 3 times)
     let mut archive3 = zip::ZipArchive::new(
         fs::File::open(&zip_path).map_err(|e| e.to_string())?
     ).map_err(|e| e.to_string())?;

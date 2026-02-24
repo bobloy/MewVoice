@@ -71,6 +71,7 @@ function App() {
           modRoot={app.state.mewtatorModRoot}
           patchDirty={showDirty}
           onRegenerate={app.regeneratePatch}
+          onSetFrequency={app.setFrequency}
         />
       )}
       {activePanel === 'settings' && (

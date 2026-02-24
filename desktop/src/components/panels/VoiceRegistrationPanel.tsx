@@ -8,6 +8,7 @@ interface VoiceRegistrationPanelProps {
   modRoot: string | null;
   patchDirty: boolean;
   onRegenerate: () => void;
+  onSetFrequency: (packId: string, freq: number) => void;
 }
 
 export default function VoiceRegistrationPanel({
@@ -16,6 +17,7 @@ export default function VoiceRegistrationPanel({
   modRoot,
   patchDirty,
   onRegenerate,
+  onSetFrequency,
 }: VoiceRegistrationPanelProps) {
   const enabledPacks = packs.filter((p) => p.isEnabled);
   const patchContent = useMemo(() => buildVoicePatch(packs, mutedBasePacks), [packs, mutedBasePacks]);
@@ -61,7 +63,6 @@ export default function VoiceRegistrationPanel({
       )}
 
       {/* Spawn distribution table */}
-      {/* TODO: Allow manual editing of frequency multipliers directly in the UI instead of relying only on default pack values. */}
       {enabledPacks.length > 0 ? (
         <div className="mb-6">
           <h3 className="text-sm font-medium text-mew-muted mb-3">Spawn Distribution</h3>
@@ -81,9 +82,18 @@ export default function VoiceRegistrationPanel({
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-xs text-mew-muted w-16 text-right tabular-nums">
-                      {pct.toFixed(1)}% (x{pack.frequency})
+                    <span className="text-xs text-mew-muted w-10 text-right tabular-nums">
+                      {pct.toFixed(1)}%
                     </span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={99}
+                      value={pack.frequency}
+                      onChange={(e) => onSetFrequency(pack.id, parseInt(e.target.value) || 0)}
+                      className="w-12 px-1.5 py-0.5 text-xs text-center bg-mew-bg border border-mew-highlight/50 rounded tabular-nums"
+                      title="Spawn weight"
+                    />
                   </div>
                 );
               })}

@@ -39,6 +39,7 @@ export function buildVoicePatch(
   }
 
   // TODO: Consider reading any existing catgen.gon.patch and merging lines instead of overwriting, to preserve other mod changes if they exist.
+  // TODO: Add validation to ensure pack IDs don't contain invalid characters for GON format (e.g., spaces, special characters)
   return `voice_sets.append {\n${lines.join('\n')}\n}\n`;
 }
 
