@@ -1,20 +1,7 @@
-import { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { SteamUser } from '@/types/voicepack';
+import { useState, useEffect, useCallback, ReactNode } from 'react';
 import { getCurrentUser, logout as apiLogout, getSteamLoginUrl } from '@/lib/api';
-
-export interface AuthContextType {
-  user: SteamUser | null;
-  loading: boolean;
-  login: () => void;
-  logout: () => Promise<void>;
-}
-
-export const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-  login: () => {},
-  logout: async () => {},
-});
+import { AuthContext } from './auth-context';
+import type { SteamUser } from '@/types/voicepack';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SteamUser | null>(null);

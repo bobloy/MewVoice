@@ -10,27 +10,26 @@ import { useAppState } from '@/hooks/useAppState';
 function App() {
   const [activePanel, setActivePanel] = useState<Panel>('packs');
   const app = useAppState();
+  const { state, loading, patchDirty, regeneratePatch, scanPacks } = app;
 
   // Don't show dirty indicator when auto-sync will handle it
-  const showDirty = app.patchDirty && !app.state.autoSync;
+  const showDirty = patchDirty && !state.autoSync;
 
   // Auto-sync: regenerate patch whenever packs change (if enabled)
   useEffect(() => {
-    if (app.state.autoSync && app.patchDirty && app.state.mewtatorModRoot) {
-      app.regeneratePatch();
+    if (state.autoSync && patchDirty && state.mewtatorModRoot) {
+      regeneratePatch();
     }
-  }, [app.state.autoSync, app.patchDirty, app.state.mewtatorModRoot, app.regeneratePatch]);
+  }, [state.autoSync, patchDirty, state.mewtatorModRoot, regeneratePatch]);
 
   // Auto-scan packs when mod root changes
   useEffect(() => {
-    if (app.state.mewtatorModRoot && !app.loading) {
-      app.scanPacks();
+    if (state.mewtatorModRoot && !loading) {
+      scanPacks();
     }
-  // Only run when modRoot actually changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [app.state.mewtatorModRoot]);
+  }, [state.mewtatorModRoot, loading, scanPacks]);
 
-  if (app.loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-mew-muted">Loading...</p>
@@ -48,39 +47,39 @@ function App() {
     >
       {activePanel === 'packs' && (
         <InstalledPacksPanel
-          packs={app.state.packs}
-          modRoot={app.state.mewtatorModRoot}
+          packs={state.packs}
+          modRoot={state.mewtatorModRoot}
           onToggle={app.togglePack}
           onSetFrequency={app.setFrequency}
           onImport={app.importZip}
           onUninstall={app.uninstallPack}
-          onScan={app.scanPacks}
+          onScan={scanPacks}
           patchDirty={showDirty}
         />
       )}
       {activePanel === 'base-packs' && (
         <BasePacksPanel
-          mutedBasePacks={app.state.mutedBasePacks}
+          mutedBasePacks={state.mutedBasePacks}
           onToggleMute={app.toggleMuteBasePack}
         />
       )}
       {activePanel === 'registration' && (
         <VoiceRegistrationPanel
-          packs={app.state.packs}
-          mutedBasePacks={app.state.mutedBasePacks}
-          modRoot={app.state.mewtatorModRoot}
+          packs={state.packs}
+          mutedBasePacks={state.mutedBasePacks}
+          modRoot={state.mewtatorModRoot}
           patchDirty={showDirty}
-          onRegenerate={app.regeneratePatch}
+          onRegenerate={regeneratePatch}
           onSetFrequency={app.setFrequency}
         />
       )}
       {activePanel === 'settings' && (
         <SettingsPanel
-          modRoot={app.state.mewtatorModRoot}
-          autoSync={app.state.autoSync}
+          modRoot={state.mewtatorModRoot}
+          autoSync={state.autoSync}
           onSetModRoot={app.setModRoot}
           onSetAutoSync={app.setAutoSync}
-          onScan={app.scanPacks}
+          onScan={scanPacks}
         />
       )}
     </Shell>

@@ -30,6 +30,15 @@ export function useLibraryPacks() {
   const fetchIdRef = useRef(0);
   // Track whether initial load is done
   const hasLoadedRef = useRef(false);
+  const searchQueryRef = useRef(filters.q);
+  // Keep latest non-search filters for q-only debounced fetches
+  const nonSearchFiltersRef = useRef({
+    sort: filters.sort,
+    gender: filters.gender,
+    minScore: filters.minScore,
+    hasRecommended: filters.hasRecommended,
+    author: filters.author,
+  });
 
   const fetchPacks = useCallback(async (f: LibraryFilters, offset: number, append: boolean) => {
     const id = ++fetchIdRef.current;
@@ -66,21 +75,49 @@ export function useLibraryPacks() {
     }
   }, []);
 
+  useEffect(() => {
+    searchQueryRef.current = filters.q;
+  }, [filters.q]);
+
+  useEffect(() => {
+    nonSearchFiltersRef.current = {
+      sort: filters.sort,
+      gender: filters.gender,
+      minScore: filters.minScore,
+      hasRecommended: filters.hasRecommended,
+      author: filters.author,
+    };
+  }, [filters.sort, filters.gender, filters.minScore, filters.hasRecommended, filters.author]);
+
   // Initial load + refetch when filters change (except q, which is debounced)
   useEffect(() => {
-    fetchPacks(filters, 0, false);
-  }, [filters.sort, filters.gender, filters.minScore, filters.hasRecommended, filters.author]);
+    fetchPacks(
+      {
+        ...nonSearchFiltersRef.current,
+        q: searchQueryRef.current,
+      },
+      0,
+      false,
+    );
+  }, [fetchPacks, filters.sort, filters.gender, filters.minScore, filters.hasRecommended, filters.author]);
 
   // Debounced search
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchPacks(filters, 0, false);
+      fetchPacks(
+        {
+          ...nonSearchFiltersRef.current,
+          q: searchQueryRef.current,
+        },
+        0,
+        false,
+      );
     }, SEARCH_DEBOUNCE_MS);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [filters.q]);
+  }, [fetchPacks, filters.q]);
 
   const setFilters = useCallback((update: Partial<LibraryFilters>) => {
     setFiltersState((prev) => ({ ...prev, ...update }));

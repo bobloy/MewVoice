@@ -79,7 +79,7 @@ export function ActionRecorder({ action, clips, normalClips, onAddClip, onRemove
       blob: audioBlob,
       url: clipUrl,
       duration,
-      fileName: `${action.toLowerCase()}${clips.length + 1}.webm`,
+      fileName: `${action.toLowerCase()}_${Date.now()}.webm`,
       isValid: validation.valid,
       validationErrors: validation.errors,
       validationWarnings: validation.warnings,
@@ -87,7 +87,7 @@ export function ActionRecorder({ action, clips, normalClips, onAddClip, onRemove
 
     onAddClip(clip);
     clearRecording();
-  }, [audioBlob, isRecording]);
+  }, [audioBlob, isRecording, duration, action, onAddClip, clearRecording]);
 
   const handleSaveTrim = (updatedClip: AudioClip) => {
     onUpdateClip(updatedClip);
