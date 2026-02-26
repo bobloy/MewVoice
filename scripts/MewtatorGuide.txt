@@ -1,0 +1,93 @@
+Mewgenics Mewtator Modding Guide
+
+# Core Concept
+Mewtator is a mod launcher that injects custom arguments (e.g., `-modpaths C:\path\to\mod`) into the game. It does NOT modify or unpack the base game resources (`resources.gpak`). The game engine itself handles loading `.patch`, `.append`, and `.merge` files from the specified mod paths.
+
+# General Workflow
+1. Create your mod structure in a folder (e.g., `Mewtator/mods/MyMod`).
+2. Add a `description.json` file to identify your mod (see format below).
+3. Place your modified files in the mod folder, mirroring the game's directory structure.
+4. Use the appropriate suffix for your changes:
+   - `.append` (Add new content to lists)
+   - `.merge` (Update specific fields in existing entries)
+   - `.patch` (Complex nested data modifications)
+
+# Voice Pack Installation (MewVoice Desktop)
+Voice packs are managed by the MewVoice Desktop app (Tauri). It handles all
+patching automatically — users never need to touch the game files manually.
+
+## How it works
+1. All voice packs install into a single shared mod folder: `mods/MewVoice/`
+2. Each pack's audio lives in `MewVoice/audio/voices/<packname>/`
+3. Each pack has a `.gon` voice definition at `MewVoice/audio/voices/<packname>.gon`
+4. The desktop app writes ONE merged patch file: `MewVoice/data/catgen.gon.patch`
+   - This file registers all enabled custom packs and their spawn weights
+   - It uses `voice_sets.append { ... }` syntax so base game voices still work
+   - Muted base packs are included with weight 0 to suppress them
+
+## catgen.gon.patch format
+voice_sets.append {
+    base_cat 0            <- weight 0 = muted
+    custom_voice_1 1      <- weight 1 = normal spawn rate
+    fancy_meow 3          <- weight 3 = 3x more likely than weight-1 packs
+}
+
+## description.json format (Mewtator requirement)
+Every mod folder must have a description.json:
+{
+    "name": "MewVoice Master Mod",
+    "description": "Merged voice pack registrations from MewVoice Desktop",
+    "author": "MewVoice",
+    "version": "1.0.0"
+}
+
+Note: The voice set ID (used in catgen.gon.patch) comes from the pack's folder
+name, NOT the description.json name field. The description.json exists only to
+satisfy Mewtator's mod discovery requirements.
+
+# Suffix Behavior Rules
+
+## .append (Add Content)
+**Purpose**: Adds new data to the end of an existing file or list.
+**Use when**: Adding new SWFs or extending lists.
+**Example**:
+```
+game [
+    yourfile.swf
+]
+```
+*Tip: Always append SWFs instead of overwriting the list to allow multiple mods to work together.*
+
+## .merge (Change Specific Fields)
+**Purpose**: Updates specific fields in an existing entry without touching other data.
+**Use when**: Tweaking stats or changing palettes.
+**Structure**:
+```
+1 {
+    palette 5
+}
+```
+*This changes only the palette of entry 1.*
+
+## .patch (Complex Modifications)
+**Purpose**: Modify nested data or lists within an entry.
+**Use when**: adding to internal lists (like `art_alts`) or editing complex structures.
+**Example**:
+```
+1 {
+    palette 5
+    art_alts.append [
+        [Player PlayerRetro]
+    ]
+}
+```
+**Modifiers**:
+* `.overwrite`
+* `.append`
+* `.merge`
+* `.add` (numeric)
+* `.multiply` (numeric)
+
+# Audio Upload Improvements
+- Max audio length increased to 8 seconds.
+- Volume adjustment added to the upload/trim tool.

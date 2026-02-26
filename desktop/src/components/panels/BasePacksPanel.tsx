@@ -251,7 +251,7 @@ export default function BasePacksPanel({
       </div>
 
       {/* Pack list */}
-      <div className="space-y-1">
+<div className="space-y-1 h-full overflow-y-auto">
         {filtered.map((pack) => {
           const isMuted = mutedBasePacks.includes(pack.id);
           return (
