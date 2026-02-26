@@ -15,7 +15,7 @@
 
 body {
   margin: 0;
-  font-family: 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: Kanit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -27,13 +27,16 @@ body {
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--color-mushroom);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--color-olive);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-olive-hover);
 }
@@ -42,11 +45,13 @@ body {
 audio::-webkit-media-controls-panel {
   background: var(--color-mushroom);
 }
+
 audio::-webkit-media-controls-enclosure {
   background: var(--color-mushroom);
   border-radius: 8px;
   overflow: hidden;
 }
+
 audio::-webkit-media-controls-play-button,
 audio::-webkit-media-controls-mute-button {
   background-color: var(--color-mushroom);
@@ -55,6 +60,6 @@ audio::-webkit-media-controls-mute-button {
 
 /* Selection color */
 ::selection {
-  background: rgba(196, 122, 74, 0.35);
+  background: rgb(196 122 74 / 35%);
   color: var(--color-cream);
 }

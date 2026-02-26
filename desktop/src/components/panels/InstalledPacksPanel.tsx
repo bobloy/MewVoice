@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import type { InstalledVoicePack } from '@/types/manager';
 
 interface InstalledPacksPanelProps {
@@ -11,6 +12,8 @@ interface InstalledPacksPanelProps {
   patchDirty: boolean;
 }
 
+const MEWVOICE_URL = 'https://mewvoice.com';
+
 export default function InstalledPacksPanel({
   packs,
   modRoot,
@@ -21,6 +24,24 @@ export default function InstalledPacksPanel({
   onScan,
   patchDirty,
 }: InstalledPacksPanelProps) {
+  const [showOpenFallbackModal, setShowOpenFallbackModal] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
+
+  const copyMewVoiceUrl = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(MEWVOICE_URL);
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('failed');
+    }
+  }, []);
+
+  const showManualOpenFallback = useCallback(async () => {
+    setShowOpenFallbackModal(true);
+    setCopyStatus('idle');
+    await copyMewVoiceUrl();
+  }, [copyMewVoiceUrl]);
+
   const handleImport = async () => {
     try {
       let selected: string | null = null;
@@ -40,6 +61,23 @@ export default function InstalledPacksPanel({
       console.error('Import dialog error:', e);
     }
   };
+
+  const handleOpenMewVoice = async () => {
+    try {
+      if ('__TAURI_INTERNALS__' in window) {
+        // Use Tauri opener plugin to open external link
+        const { openUrl } = await import('@tauri-apps/plugin-opener');
+        await openUrl(MEWVOICE_URL);
+      } else {
+        window.open(MEWVOICE_URL, '_blank', 'noopener,noreferrer');
+      }
+    } catch (e) {
+      console.error('Failed to open MewVoice:', e);
+      // TODO(stretch): Add an in-app library/download page so desktop users can browse voice packs without leaving the app.
+      await showManualOpenFallback();
+    }
+  };
+
 
   if (!modRoot) {
     return (
@@ -67,14 +105,12 @@ export default function InstalledPacksPanel({
           </p>
         </div>
         <div className="flex gap-2">
-          <a
-            href="https://mewvoice.com"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={handleOpenMewVoice}
             className="px-3 py-1.5 text-sm bg-mew-surface border border-mew-highlight/50 rounded hover:bg-mew-highlight/30 transition-colors"
           >
             Download More Voices
-          </a>
+          </button>
           <button
             onClick={onScan}
             className="px-3 py-1.5 text-sm bg-mew-surface border border-mew-highlight/50 rounded hover:bg-mew-highlight/30 transition-colors"
@@ -96,14 +132,12 @@ export default function InstalledPacksPanel({
           <p className="text-sm text-mew-muted/60 mt-1">
             Import a .zip from MewVoice or click "Rescan Folder" to detect existing packs.
           </p>
-          <a
-            href="https://mewvoice.com"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={handleOpenMewVoice}
             className="inline-block mt-4 px-4 py-2 text-sm bg-mew-accent text-white rounded hover:bg-mew-accent/80 transition-colors"
           >
             Download More Voices
-          </a>
+          </button>
         </div>
       ) : (
         <div className="space-y-2">
@@ -116,6 +150,44 @@ export default function InstalledPacksPanel({
               onUninstall={() => onUninstall(pack.id)}
             />
           ))}
+        </div>
+      )}
+
+      {showOpenFallbackModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="w-full max-w-xl rounded-lg border border-mew-highlight/40 bg-mew-surface p-5">
+            <h3 className="text-lg font-semibold mb-2">Open MewVoice manually</h3>
+            <p className="text-sm text-mew-muted mb-3">
+              The app could not open your browser automatically. The URL is below.
+            </p>
+            <div className="flex gap-2 mb-2">
+              <input
+                readOnly
+                value={MEWVOICE_URL}
+                className="flex-1 px-3 py-2 text-sm bg-mew-bg border border-mew-highlight/50 rounded"
+              />
+              <button
+                onClick={copyMewVoiceUrl}
+                className="px-3 py-2 text-sm bg-mew-accent text-white rounded hover:bg-mew-accent/80 transition-colors"
+              >
+                Copy Link
+              </button>
+            </div>
+            {copyStatus === 'copied' && (
+              <p className="text-xs text-mew-sage mb-3">Link copied to clipboard.</p>
+            )}
+            {copyStatus === 'failed' && (
+              <p className="text-xs text-red-300 mb-3">Copy failed. Select and copy the URL manually.</p>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowOpenFallbackModal(false)}
+                className="px-3 py-2 text-sm bg-mew-bg border border-mew-highlight/50 rounded hover:bg-mew-highlight/20 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -146,12 +218,12 @@ function PackRow({
       }`}
     >
       {/* Toggle */}
-        <button
-          onClick={onToggle}
-          className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 mt-1 ${
-            pack.isEnabled ? 'bg-mew-accent' : 'bg-mew-surface'
-          }`}
-        >
+      <button
+        onClick={onToggle}
+        className={`w-10 h-5 rounded-full relative transition-colors flex-shrink-0 mt-1 ${
+          pack.isEnabled ? 'bg-mew-accent' : 'bg-mew-surface'
+        }`}
+      >
         <span
           className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
             pack.isEnabled ? 'left-5' : 'left-0.5'

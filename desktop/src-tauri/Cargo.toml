@@ -1,6 +1,6 @@
 [package]
 name = "mewvoice-desktop"
-version = "0.2.2"
+version = "0.2.3"
 description = "MewVoice - Voice Pack Manager for Mewgenics"
 authors = ["MewVoice"]
 license = ""
@@ -25,6 +25,7 @@ tauri = { version = "2", features = [] }
 tauri-plugin-log = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+tauri-plugin-opener = "2"
 zip = "2"
 uuid = { version = "1", features = ["v4"] }
 tauri-plugin-updater = "2.10.0"

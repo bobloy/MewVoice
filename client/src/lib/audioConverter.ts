@@ -88,7 +88,7 @@ export async function convertToGameWav(blob: Blob, volumeAdjustmentDb: number = 
 /**
  * Normalize audio samples to a target Peak dBFS level.
  */
-function normalizeToPeak(samples: Float32Array<any>, targetDbfs: number): Float32Array<any> {
+function normalizeToPeak(samples: Float32Array, targetDbfs: number): Float32Array {
   // Find current peak
   let maxVal = 0;
   for (let i = 0; i < samples.length; i++) {
@@ -115,7 +115,7 @@ function normalizeToPeak(samples: Float32Array<any>, targetDbfs: number): Float3
 /**
  * Encode Float32 samples as a 16-bit PCM WAV file.
  */
-export function encodeWav(samples: Float32Array<any>, sampleRate: number): Blob {
+export function encodeWav(samples: Float32Array, sampleRate: number): Blob {
   const numChannels = 1;
   const bitsPerSample = 16;
   const bytesPerSample = bitsPerSample / 8;

@@ -32,9 +32,8 @@ export function PackBuilder() {
 
   // Auto-fill author from Steam name when user logs in and author is empty
   useEffect(() => {
-    if (user && !pack.author) {
-      setPack((p) => ({ ...p, author: user.personaName }));
-    }
+    if (!user) return;
+    setPack((p) => (p.author ? p : { ...p, author: user.personaName }));
   }, [user]);
 
   const [buildStatus, setBuildStatus] = useState<'idle' | 'converting' | 'building' | 'done' | 'error'>('idle');

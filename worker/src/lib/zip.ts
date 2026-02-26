@@ -9,7 +9,7 @@ import { generateVoiceGon } from './gon';
  * Updated by scripts/bump-version.js alongside the desktop app version.
  * The desktop app uses this to verify compatibility when loading a pack.
  */
-export const MEWVOICE_TOOL_VERSION = '0.2.2';
+export const MEWVOICE_TOOL_VERSION = '0.2.3';
 
 export interface BuildMetadata {
   name: string;

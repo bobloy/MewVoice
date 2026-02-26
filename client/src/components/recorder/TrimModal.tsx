@@ -402,7 +402,7 @@ function WaveformEditor({ buffer, start, end, gainDb, onStartChange, onEndChange
     ctx.fillRect(startX - 2, 0, 4, canvas.height);
     ctx.fillRect(endX - 2, 0, 4, canvas.height);
 
-  }, [buffer, start, end, gainLinear]);
+  }, [buffer, start, end, duration, gainLinear]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     const canvas = canvasRef.current;

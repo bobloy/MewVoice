@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "MewVoice",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "identifier": "com.mewvoice.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -22,7 +22,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost https://mewvoice.com"
     }
   },
   "bundle": {
@@ -42,7 +42,8 @@
       "endpoints": [
         "https://github.com/bobloy/MewVoice/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERGRTU5OEI4NUZCMENEODMKUldTRHpiQmZ1SmpsMzZ3MkVNR25KOStVUWZ5c3NnSG16M3djV253YXArdVNjM2ZBZ29taW1DQjYK"
-    }
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERGRTU5OEI4NUZCMENEODMKUldTRHpiQmZ1SmpsMzZ2MkVNR25KOStVUWZ5c3NnSG16M3djV253YXArdVNjM2ZBZ29taW1DQjYK"
+    },
+    "opener": {}
   }
 }

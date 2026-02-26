@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "wrangler dev --local --port 8787",
     "deploy": "wrangler deploy",
+    "lint": "eslint .",
     "db:init": "wrangler d1 execute mewvoice-db --local --file=./schema.sql",
     "db:init:remote": "wrangler d1 execute mewvoice-db --remote --file=./schema.sql",
     "typecheck": "tsc --noEmit"
@@ -15,8 +16,12 @@
     "jszip": "^3.10.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@cloudflare/workers-types": "^4.20250109.0",
+    "eslint": "^9.39.2",
+    "globals": "^16.5.0",
     "typescript": "^5.7.0",
+    "typescript-eslint": "^8.48.0",
     "wrangler": "^4.65.0"
   }
 }
