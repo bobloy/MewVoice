@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   VoicePack,
   VoiceAction,
@@ -30,11 +30,7 @@ export function PackBuilder() {
     clips: createEmptyClips(),
   });
 
-  // Auto-fill author from Steam name when user logs in and author is empty
-  useEffect(() => {
-    if (!user) return;
-    setPack((p) => (p.author ? p : { ...p, author: user.personaName }));
-  }, [user]);
+  const packAuthor = pack.author || user?.personaName || '';
 
   const [buildStatus, setBuildStatus] = useState<'idle' | 'converting' | 'building' | 'done' | 'error'>('idle');
   const [conversionProgress, setConversionProgress] = useState({ done: 0, total: 0 });
@@ -162,6 +158,7 @@ export function PackBuilder() {
     try {
       const wavPack: VoicePack = {
         ...pack,
+        author: packAuthor,
         clips: Object.fromEntries(
           VOICE_ACTIONS.map((action) => [
             action,
