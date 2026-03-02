@@ -1,0 +1,36 @@
+# Default normalization for text files.
+* text=auto
+
+# Force LF for source/config/lock files to prevent CRLF churn across platforms.
+*.c text eol=lf
+*.h text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.jsonc text eol=lf
+*.lock text eol=lf
+*.md text eol=lf
+*.rs text eol=lf
+*.sql text eol=lf
+*.toml text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.txt text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Keep Windows shell scripts in CRLF where expected.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Treat common assets as binary.
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webm binary
+*.wav binary
+*.zip binary
