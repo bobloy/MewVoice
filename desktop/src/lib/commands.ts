@@ -1,5 +1,6 @@
 import type { AppState, InstalledVoicePack } from '@/types/manager';
 import { createDefaultState } from '@/types/manager';
+import type { CommunityLibraryFilters, CommunityLibraryResult } from '@/types/library';
 
 /**
  * Check if we're running inside the Tauri webview (vs. a plain browser).
@@ -8,6 +9,9 @@ import { createDefaultState } from '@/types/manager';
 function isTauri(): boolean {
   return '__TAURI_INTERNALS__' in window;
 }
+
+const WEB_API_BASE = '/api';
+const REMOTE_API_BASE = 'https://mewvoice.com/api';
 
 /**
  * Lazy-import invoke to avoid crashing when Tauri isn't available.
@@ -88,5 +92,52 @@ export async function scanInstalledPacks(
 ): Promise<InstalledVoicePack[]> {
   if (!isTauri()) return [];
   const json = await tauriInvoke<string>('scan_installed_packs', { modRoot });
+  return JSON.parse(json);
+}
+
+// ── Community library (desktop-safe path via Tauri invoke) ──
+
+function buildLibraryQuery(filters: CommunityLibraryFilters, offset: number, limit: number): string {
+  const params = new URLSearchParams();
+  params.set('offset', String(offset));
+  params.set('limit', String(limit));
+  params.set('sort', filters.sort);
+  if (filters.q) params.set('q', filters.q);
+  if (filters.gender !== 'all') params.set('gender', filters.gender);
+  return params.toString();
+}
+
+export async function listCommunityPacks(
+  filters: CommunityLibraryFilters,
+  offset = 0,
+  limit = 20,
+): Promise<CommunityLibraryResult> {
+  if (isTauri()) {
+    const json = await tauriInvoke<string>('list_remote_packs', {
+      sort: filters.sort,
+      q: filters.q,
+      gender: filters.gender,
+      offset,
+      limit,
+    });
+    return JSON.parse(json);
+  }
+
+  const query = buildLibraryQuery(filters, offset, limit);
+  const response = await fetch(`${WEB_API_BASE}/voicepacks?${query}`);
+  if (!response.ok) throw new Error('Failed to load community packs');
+  return response.json();
+}
+
+export function getCommunityPreviewUrl(packId: string): string {
+  const apiBase = isTauri() ? REMOTE_API_BASE : WEB_API_BASE;
+  return `${apiBase}/voicepacks/${packId}/preview`;
+}
+
+export async function installPublishedPack(packId: string, modRoot: string): Promise<InstalledVoicePack> {
+  if (!isTauri()) {
+    throw new Error('Published pack installation requires the desktop app');
+  }
+  const json = await tauriInvoke<string>('download_and_install_pack', { packId, modRoot });
   return JSON.parse(json);
 }

@@ -26,6 +26,8 @@ pub fn run() {
             commands::catgen::write_voice_patch,
             commands::install::install_pack,
             commands::install::uninstall_pack,
+            commands::remote::list_remote_packs,
+            commands::remote::download_and_install_pack,
             commands::scan::scan_installed_packs,
         ])
         .run(tauri::generate_context!())

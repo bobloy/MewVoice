@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Shell from '@/components/layout/Shell';
 import type { Panel } from '@/components/layout/Sidebar';
 import InstalledPacksPanel from '@/components/panels/InstalledPacksPanel';
+import CommunityLibraryPanel from '@/components/panels/CommunityLibraryPanel';
 import BasePacksPanel from '@/components/panels/BasePacksPanel';
 import VoiceRegistrationPanel from '@/components/panels/VoiceRegistrationPanel';
 import SettingsPanel from '@/components/panels/SettingsPanel';
@@ -55,6 +56,14 @@ function App() {
           onUninstall={app.uninstallPack}
           onScan={scanPacks}
           patchDirty={showDirty}
+        />
+      )}
+      {activePanel === 'library' && (
+        <CommunityLibraryPanel
+          modRoot={state.mewtatorModRoot}
+          installedPackIds={state.packs.map((pack) => pack.id)}
+          onInstallPack={app.installPublishedPack}
+          onOpenSettings={() => setActivePanel('settings')}
         />
       )}
       {activePanel === 'base-packs' && (
