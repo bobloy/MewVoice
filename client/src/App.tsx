@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { PackBuilder } from '@/components/pack-builder/PackBuilder';
 import { LibraryBrowser } from '@/components/library/LibraryBrowser';
 import { InstructionsPage } from '@/components/instructions/InstructionsPage';
 import { useAuth } from '@/hooks/useAuth';
 
-type Page = 'create' | 'browse' | 'instructions';
-
-// TODO: Replace simple state-based routing with a proper router (e.g., react-router-dom) to support deep linking and browser history.
 function App() {
-  const [page, setPage] = useState<Page>('create');
   const { user, loading, login, logout } = useAuth();
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `font-medium text-sm transition-colors ${
+      isActive ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
+    }`;
 
   return (
     <div className="min-h-screen bg-mew-bg">
@@ -25,27 +25,15 @@ function App() {
           </div>
           <div className="flex items-center gap-4">
             <nav className="flex gap-4">
-              <button
-                onClick={() => setPage('create')}
-                className={`font-medium text-sm transition-colors ${page === 'create' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
-                  }`}
-              >
+              <NavLink to="/create" className={navLinkClass}>
                 Create
-              </button>
-              <button
-                onClick={() => setPage('browse')}
-                className={`font-medium text-sm transition-colors ${page === 'browse' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
-                  }`}
-              >
+              </NavLink>
+              <NavLink to="/browse" className={navLinkClass}>
                 Browse Packs
-              </button>
-              <button
-                onClick={() => setPage('instructions')}
-                className={`font-medium text-sm transition-colors ${page === 'instructions' ? 'text-mew-accent' : 'text-mew-muted hover:text-mew-text'
-                  }`}
-              >
+              </NavLink>
+              <NavLink to="/instructions" className={navLinkClass}>
                 Instructions
-              </button>
+              </NavLink>
             </nav>
 
             <div className="border-l border-mew-highlight/30 pl-4">
@@ -90,9 +78,14 @@ function App() {
 
       {/* Main content */}
       <main className="px-4 py-8">
-        {page === 'create' && <PackBuilder />}
-        {page === 'browse' && <LibraryBrowser />}
-        {page === 'instructions' && <InstructionsPage />}
+        {/* TODO: Split route-level bundles so /browse can load without create-page recorder code. */}
+        <Routes>
+          <Route path="/" element={<Navigate to="/create" replace />} />
+          <Route path="/create" element={<PackBuilder />} />
+          <Route path="/browse" element={<LibraryBrowser />} />
+          <Route path="/instructions" element={<InstructionsPage />} />
+          <Route path="*" element={<Navigate to="/create" replace />} />
+        </Routes>
       </main>
 
       {/* Footer */}
