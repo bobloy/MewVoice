@@ -191,7 +191,8 @@ export default function CommunityLibraryPanel({
   }, [playingPackId]);
 
   return (
-    <div>
+    <div className="flex flex-col min-h-0 flex-1">
+      <div className="flex-shrink-0">
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
           <h2 className="text-xl font-semibold">Community Library</h2>
@@ -251,7 +252,9 @@ export default function CommunityLibraryPanel({
           <option value="top">Top score</option>
         </select>
       </div>
+      </div>
 
+      <div className="flex-1 min-h-0 overflow-y-auto">
       {initialLoading ? (
         <div className="text-center py-16 text-mew-muted">Loading community packs...</div>
       ) : error ? (
@@ -353,6 +356,7 @@ export default function CommunityLibraryPanel({
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

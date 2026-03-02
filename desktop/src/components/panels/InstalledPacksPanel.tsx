@@ -90,8 +90,8 @@ export default function InstalledPacksPanel({
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col min-h-0 flex-1">
+      <div className="flex-shrink-0 flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold">Installed Voice Packs</h2>
           <p className="text-sm text-mew-muted mt-1">
@@ -125,6 +125,7 @@ export default function InstalledPacksPanel({
         </div>
       </div>
 
+      <div className="flex-1 min-h-0 overflow-y-auto">
       {packs.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-mew-highlight/30 rounded-lg">
           <p className="text-mew-muted">No voice packs found</p>
@@ -151,6 +152,7 @@ export default function InstalledPacksPanel({
           ))}
         </div>
       )}
+      </div>
 
       {showOpenFallbackModal && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">

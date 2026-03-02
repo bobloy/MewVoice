@@ -205,7 +205,8 @@ export default function BasePacksPanel({
   const mutedCount = mutedBasePacks.length;
 
   return (
-    <div>
+    <div className="flex flex-col min-h-0 flex-1">
+      <div className="flex-shrink-0">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold">Base Game Voices</h2>
@@ -249,9 +250,10 @@ export default function BasePacksPanel({
           ))}
         </div>
       </div>
+      </div>
 
       {/* Pack list */}
-<div className="space-y-1 h-full overflow-y-auto">
+<div className="flex-1 min-h-0 space-y-1 overflow-y-auto">
         {filtered.map((pack) => {
           const isMuted = mutedBasePacks.includes(pack.id);
           return (
