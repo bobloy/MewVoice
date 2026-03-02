@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Fetch hash from release assets
+      - name: Fetch hashes from release assets
         id: hash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -21,17 +21,38 @@ jobs:
             --pattern "*.sha256" \
             --dir "$RUNNER_TEMP"
 
-          sha_file=$(find "$RUNNER_TEMP" -name "*.sha256" | head -1)
-          content=$(cat "$sha_file")
-          # File format written by release.yml: "<hash>  <filename>"
-          hash=$(awk '{print $1}' <<< "$content")
-          name=$(awk '{print $2}' <<< "$content")
+          # Build a table of all checksums (one per platform artifact)
+          table=""
+          vt_hashes=""
+          for sha_file in "$RUNNER_TEMP"/*.sha256; do
+            [ -f "$sha_file" ] || continue
+            content=$(cat "$sha_file")
+            hash=$(awk '{print $1}' <<< "$content")
+            name=$(awk '{print $2}' <<< "$content" | tr -d '[:space:]')
+            table="${table}| \`${name}\` | \`${hash}\` |\n"
+            vt_hashes="${vt_hashes}${hash}:${name}\n"
+          done
 
-          # Trim any trailing whitespace/newlines from the filename
-          name=$(echo "$name" | tr -d '[:space:]')
+          # Export first hash for backwards compat (Windows installer)
+          first_file=$(find "$RUNNER_TEMP" -name "*.sha256" | sort | head -1)
+          first_hash=$(awk '{print $1}' < "$first_file")
+          first_name=$(awk '{print $2}' < "$first_file" | tr -d '[:space:]')
 
-          echo "sha256=$hash"        >> "$GITHUB_OUTPUT"
-          echo "installer_name=$name" >> "$GITHUB_OUTPUT"
+          echo "sha256=$first_hash"        >> "$GITHUB_OUTPUT"
+          echo "installer_name=$first_name" >> "$GITHUB_OUTPUT"
+
+          # Multi-line outputs for the summary
+          {
+            echo "table<<TABLEEOF"
+            echo -e "$table"
+            echo "TABLEEOF"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "vt_hashes<<VTEOF"
+            echo -e "$vt_hashes"
+            echo "VTEOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Submit to VirusTotal
         # Fix: Map the secret to env first, then check env in the 'if'
@@ -40,48 +61,49 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: env.VT_API_KEY != ''
         run: |
-          hash="${{ steps.hash.outputs.sha256 }}"
-          name="${{ steps.hash.outputs.installer_name }}"
           tag="${{ github.event.release.tag_name }}"
 
-          http_code=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "x-apikey: $VT_API_KEY" \
-            "https://www.virustotal.com/api/v3/files/$hash")
+          # Submit each artifact to VirusTotal
+          while IFS=: read -r hash name; do
+            [ -z "$hash" ] && continue
+            echo "--- Checking $name ($hash) ---"
 
-          if [ "$http_code" = "200" ]; then
-            echo "Hash already known to VirusTotal — skipping upload."
-          else
-            echo "Hash not yet known — downloading installer from release and uploading..."
-            gh release download "$tag" \
-              --repo "${{ github.repository }}" \
-              --pattern "$name" \
-              --dir "$RUNNER_TEMP"
-
-            analysis_id=$(curl -s \
+            http_code=$(curl -s -o /dev/null -w "%{http_code}" \
               -H "x-apikey: $VT_API_KEY" \
-              -F "file=@$RUNNER_TEMP/$name" \
-              "https://www.virustotal.com/api/v3/files" \
-              | jq -r '.data.id')
-            echo "Queued. Analysis ID: $analysis_id"
-          fi
+              "https://www.virustotal.com/api/v3/files/$hash")
 
-          echo "Results: https://www.virustotal.com/gui/file/$hash"
+            if [ "$http_code" = "200" ]; then
+              echo "Hash already known to VirusTotal — skipping upload."
+            else
+              echo "Hash not yet known — downloading and uploading..."
+              gh release download "$tag" \
+                --repo "${{ github.repository }}" \
+                --pattern "$name" \
+                --dir "$RUNNER_TEMP"
+
+              analysis_id=$(curl -s \
+                -H "x-apikey: $VT_API_KEY" \
+                -F "file=@$RUNNER_TEMP/$name" \
+                "https://www.virustotal.com/api/v3/files" \
+                | jq -r '.data.id')
+              echo "Queued. Analysis ID: $analysis_id"
+            fi
+
+            echo "Results: https://www.virustotal.com/gui/file/$hash"
+          done <<< "${{ steps.hash.outputs.vt_hashes }}"
 
       - name: Write job summary
         run: |
-          hash="${{ steps.hash.outputs.sha256 }}"
-          name="${{ steps.hash.outputs.installer_name }}"
           tag="${{ github.event.release.tag_name }}"
           cat >> "$GITHUB_STEP_SUMMARY" << EOF
           ## Release Checksums
 
           | File | SHA-256 |
           |------|---------|
-          | \`$name\` | \`$hash\` |
+          ${{ steps.hash.outputs.table }}
 
           ## AV Reputation Submissions
 
-          - **VirusTotal**: https://www.virustotal.com/gui/file/$hash
-          - **Microsoft WDSI** *(manual)*: https://www.microsoft.com/en-us/wdsi/filesubmission
-            - Submit hash \`$hash\` or upload the installer directly.
+          - **VirusTotal**: check each hash above at https://www.virustotal.com
+          - **Microsoft WDSI** *(manual, Windows only)*: https://www.microsoft.com/en-us/wdsi/filesubmission
           EOF
