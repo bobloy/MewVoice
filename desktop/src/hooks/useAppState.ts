@@ -131,6 +131,23 @@ export function useAppState() {
     [state.mewtatorModRoot, addPack],
   );
 
+  const installPublishedPack = useCallback(
+    async (packId: string) => {
+      if (!state.mewtatorModRoot) {
+        setError('Mewtator mod root not configured');
+        return;
+      }
+      try {
+        const pack = await cmd.installPublishedPack(packId, state.mewtatorModRoot);
+        addPack(pack);
+        setError(null);
+      } catch (e) {
+        setError(String(e));
+      }
+    },
+    [state.mewtatorModRoot, addPack],
+  );
+
   const uninstallPack = useCallback(
     async (packId: string) => {
       if (!state.mewtatorModRoot) return;
@@ -185,6 +202,7 @@ export function useAppState() {
     toggleMuteBasePack,
     regeneratePatch,
     importZip,
+    installPublishedPack,
     uninstallPack,
     scanPacks,
     clearError: () => setError(null),

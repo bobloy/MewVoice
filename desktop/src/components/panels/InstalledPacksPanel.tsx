@@ -73,7 +73,6 @@ export default function InstalledPacksPanel({
       }
     } catch (e) {
       console.error('Failed to open MewVoice:', e);
-      // TODO(stretch): Add an in-app library/download page so desktop users can browse voice packs without leaving the app.
       await showManualOpenFallback();
     }
   };
