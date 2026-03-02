@@ -79,7 +79,7 @@ export function PackCard({
   };
 
   return (
-    <div className="bg-mew-surface rounded-xl p-5 border border-mew-highlight/30 hover:border-mew-accent/40 transition-colors">
+    <div className="bg-mew-surface rounded-xl p-5 border border-mew-border/30 hover:border-mew-accent/40 transition-colors">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">

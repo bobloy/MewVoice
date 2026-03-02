@@ -10,7 +10,7 @@ export function InstructionsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* What is this */}
-      <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
+      <section className="bg-mew-surface rounded-xl p-6 border border-mew-border/30">
         <h2 className="text-2xl font-bold mb-3">What is this?</h2>
         <p className="text-mew-muted leading-relaxed">
           MewVoice lets you make custom cat voices for{' '}
@@ -25,7 +25,7 @@ export function InstructionsPage() {
       </section>
 
       {/* How it works */}
-      <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
+      <section className="bg-mew-surface rounded-xl p-6 border border-mew-border/30">
         <h2 className="text-2xl font-bold mb-4">How it works</h2>
         <ol className="space-y-3 text-mew-muted list-decimal list-inside">
           <li>
@@ -64,7 +64,7 @@ export function InstructionsPage() {
       </section>
 
       {/* Voice actions */}
-      <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
+      <section className="bg-mew-surface rounded-xl p-6 border border-mew-border/30">
         <h2 className="text-2xl font-bold mb-2">Voice actions</h2>
         <p className="text-mew-muted text-sm mb-4">
           Based on all 186 built-in voice packs in the game files. Six actions
@@ -74,7 +74,7 @@ export function InstructionsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-mew-muted border-b border-mew-highlight/30">
+              <tr className="text-left text-mew-muted border-b border-mew-border/30">
                 <th className="pb-2 pr-4">Action</th>
                 <th className="pb-2 pr-4">Description</th>
                 <th className="pb-2 pr-4 text-center">Recommended</th>
@@ -89,7 +89,7 @@ export function InstructionsPage() {
                 return (
                   <tr
                     key={action}
-                    className="border-b border-mew-highlight/10 text-mew-muted"
+                    className="border-b border-mew-border/10 text-mew-muted"
                   >
                     <td className="py-2 pr-4 text-mew-text font-medium whitespace-nowrap">
                       {action}
@@ -119,7 +119,7 @@ export function InstructionsPage() {
       </section>
 
       {/* Audio format */}
-      <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
+      <section className="bg-mew-surface rounded-xl p-6 border border-mew-border/30">
         <h2 className="text-2xl font-bold mb-3">Audio format</h2>
         <p className="text-mew-muted text-sm mb-4">
           Record in any format your browser supports (usually WebM), or upload
@@ -155,7 +155,7 @@ export function InstructionsPage() {
       </section>
 
       {/* Recording tips */}
-      <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
+      <section className="bg-mew-surface rounded-xl p-6 border border-mew-border/30">
         <h2 className="text-2xl font-bold mb-3">Recording tips</h2>
         <ul className="space-y-2 text-mew-muted text-sm list-disc list-inside">
           <li>Keep clips short. Most are under 1.5 seconds.</li>
@@ -180,7 +180,7 @@ export function InstructionsPage() {
       </section>
 
       {/* Installation */}
-      <section className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
+      <section className="bg-mew-surface rounded-xl p-6 border border-mew-border/30">
         <h2 className="text-2xl font-bold mb-3">Installing voice packs</h2>
 
         <p className="text-mew-muted text-sm mb-4">

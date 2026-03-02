@@ -220,7 +220,7 @@ export function PackBuilder() {
       {/* Pack metadata — hidden after build since ZIP is already created */}
       {buildStatus !== 'done' && (
         <>
-          <div className="bg-mew-surface rounded-xl p-6 mb-6 border border-mew-highlight/30">
+          <div className="bg-mew-surface rounded-xl p-6 mb-6 border border-mew-border/30">
             <h2 className="text-2xl font-bold mb-4">Voice Pack Info</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -232,7 +232,7 @@ export function PackBuilder() {
                     onChange={(e) => setPack((p) => ({ ...p, name: e.target.value }))}
                     placeholder="e.g. Silly Derp Cat"
                     maxLength={50}
-                    className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
+                    className="w-full bg-mew-bg border border-mew-border/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
                   />
                 </div>
                 <div>
@@ -240,7 +240,7 @@ export function PackBuilder() {
                   <select
                     value={pack.gender}
                     onChange={(e) => setPack((p) => ({ ...p, gender: e.target.value as VoiceGender }))}
-                    className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text focus:outline-none focus:border-mew-accent"
+                    className="w-full bg-mew-bg border border-mew-border/50 rounded-lg px-4 py-2 text-mew-text focus:outline-none focus:border-mew-accent"
                   >
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -260,7 +260,7 @@ export function PackBuilder() {
                   onChange={(e) => setPack((p) => ({ ...p, description: e.target.value }))}
                   placeholder="A goofy cat voice with lots of derp energy"
                   maxLength={200}
-                  className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
+                  className="w-full bg-mew-bg border border-mew-border/50 rounded-lg px-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent"
                 />
               </div>
             </div>
@@ -268,7 +268,7 @@ export function PackBuilder() {
 
 
           {/* Progress bar */}
-          <div className="bg-mew-surface rounded-xl p-4 mb-6 border border-mew-highlight/30">
+          <div className="bg-mew-surface rounded-xl p-4 mb-6 border border-mew-border/30">
             <div className="flex justify-between text-sm mb-2">
               <span className="text-mew-muted">Progress</span>
               <span className="text-mew-text font-medium">{totalClips} clips recorded</span>
@@ -305,7 +305,7 @@ export function PackBuilder() {
       )}
 
       {/* Build / Download / Publish section */}
-      <div className="bg-mew-surface rounded-xl p-6 border border-mew-highlight/30">
+      <div className="bg-mew-surface rounded-xl p-6 border border-mew-border/30">
         {buildStatus === 'done' && downloadUrl ? (
           <div className="text-center space-y-4">
             <p className="text-green-400 text-lg font-bold">Voice pack built successfully!</p>

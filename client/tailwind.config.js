@@ -8,6 +8,7 @@ export default {
           bg: 'var(--color-charcoal)',
           surface: 'var(--color-mushroom)',
           accent: 'var(--color-ember)',
+          border: 'var(--color-border)',
           highlight: 'var(--color-olive)',
           text: 'var(--color-cream)',
           muted: 'var(--color-parchment)',

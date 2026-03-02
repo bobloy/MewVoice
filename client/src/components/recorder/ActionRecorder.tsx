@@ -129,7 +129,7 @@ export function ActionRecorder({ action, clips, normalClips, onAddClip, onRemove
   const recordingLimit = AUDIO_REQUIREMENTS.recordingLimitSec;
 
   return (
-    <div className="bg-mew-surface rounded-xl p-5 border border-mew-highlight/30">
+    <div className="bg-mew-surface rounded-xl p-5 border border-mew-border/30">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-bold text-mew-accent">{action}</h3>
         <span className={`text-sm px-2 py-0.5 rounded-full ${badgeClass}`}>
@@ -181,8 +181,8 @@ export function ActionRecorder({ action, clips, normalClips, onAddClip, onRemove
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsMoveMenuOpen(null)} />
 
-                    <div className="absolute right-0 top-full mt-1 w-40 bg-mew-surface border border-mew-highlight/50 rounded-lg shadow-xl z-20 max-h-64 overflow-y-auto">
-                      <div className="px-3 py-1.5 text-[10px] font-semibold text-mew-muted/60 uppercase tracking-wider border-b border-mew-highlight/20">
+                    <div className="absolute right-0 top-full mt-1 w-40 bg-mew-surface border border-mew-border/50 rounded-lg shadow-xl z-20 max-h-64 overflow-y-auto">
+                      <div className="px-3 py-1.5 text-[10px] font-semibold text-mew-muted/60 uppercase tracking-wider border-b border-mew-border/20">
                         Move to
                       </div>
                       {VOICE_ACTIONS.filter(a => a !== action).map((targetAction) => (
@@ -197,7 +197,7 @@ export function ActionRecorder({ action, clips, normalClips, onAddClip, onRemove
                           {targetAction}
                         </button>
                       ))}
-                      <div className="px-3 py-1.5 text-[10px] font-semibold text-mew-muted/60 uppercase tracking-wider border-t border-b border-mew-highlight/20">
+                      <div className="px-3 py-1.5 text-[10px] font-semibold text-mew-muted/60 uppercase tracking-wider border-t border-b border-mew-border/20">
                         Copy to
                       </div>
                       {VOICE_ACTIONS.filter(a => a !== action).map((targetAction) => (
