@@ -18,8 +18,11 @@ export default function SettingsPanel({
   onScan,
 }: SettingsPanelProps) {
   const [updateStatus, setUpdateStatus] = useState<string>('');
-  const [isUpdating, setIsUpdating] = useState(false);
-  // TODO: Add updateError state to show specific error messages to users instead of generic "Failed to check for updates"
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+  const [pendingUpdate, setPendingUpdate] = useState<Awaited<ReturnType<typeof import('@tauri-apps/plugin-updater')['check']>>>(null);
+  const [updateReadyToRestart, setUpdateReadyToRestart] = useState(false);
 
   const handleCheckUpdate = async () => {
     // Check if running in Tauri (not plain browser)
@@ -29,53 +32,82 @@ export default function SettingsPanel({
     }
 
     try {
-      setIsUpdating(true);
+      setIsCheckingUpdate(true);
+      setPendingUpdate(null);
+      setUpdateReadyToRestart(false);
+      setDownloadProgress(null);
       setUpdateStatus('Checking for updates...');
 
       // Lazy-load Tauri plugins to avoid issues in browser mode
       const { check } = await import('@tauri-apps/plugin-updater');
-      const { relaunch } = await import('@tauri-apps/plugin-process');
-
       const update = await check();
 
       if (update) {
-        // TODO: Consider adding a "Skip" button to cancel download mid-progress
-        setUpdateStatus(`Found version ${update.version}. Downloading...`);
-        let downloaded = 0;
-        let contentLength = 0;
-
-        await update.downloadAndInstall((event) => {
-          switch (event.event) {
-            case 'Started':
-              contentLength = event.data.contentLength || 0;
-              setUpdateStatus(`Downloading (0%)...`);
-              break;
-            case 'Progress':
-              downloaded += event.data.chunkLength;
-              if (contentLength > 0) {
-                const percent = Math.round((downloaded / contentLength) * 100);
-                setUpdateStatus(`Downloading (${percent}%)...`);
-              }
-              break;
-            case 'Finished':
-              setUpdateStatus('Installing update...');
-              break;
-          }
-        });
-
-        setUpdateStatus('Update installed. Restarting...');
-        await relaunch();
+        setPendingUpdate(update);
+        setUpdateStatus(`Update available: v${update.version}. Review details, then choose whether to install.`);
       } else {
         setUpdateStatus('App is up to date.');
       }
     } catch (err) {
       console.error('Update failed:', err);
-      // TODO: Display specific error message (network error, no update endpoint, etc.) instead of generic failure
       setUpdateStatus('Failed to check for updates.');
     } finally {
-      setIsUpdating(false);
+      setIsCheckingUpdate(false);
     }
   };
+
+  const handleInstallUpdate = async () => {
+    if (!pendingUpdate) return;
+    try {
+      setIsDownloadingUpdate(true);
+      setDownloadProgress(0);
+      setUpdateStatus(`Downloading v${pendingUpdate.version}...`);
+      let downloaded = 0;
+      let contentLength = 0;
+
+      await pendingUpdate.downloadAndInstall((event) => {
+        switch (event.event) {
+          case 'Started':
+            contentLength = event.data.contentLength || 0;
+            setDownloadProgress(0);
+            setUpdateStatus('Downloading update...');
+            break;
+          case 'Progress':
+            downloaded += event.data.chunkLength;
+            if (contentLength > 0) {
+              const percent = Math.round((downloaded / contentLength) * 100);
+              setDownloadProgress(percent);
+              setUpdateStatus(`Downloading update (${percent}%)...`);
+            }
+            break;
+          case 'Finished':
+            setDownloadProgress(100);
+            setUpdateStatus('Update downloaded and installed. Restart to apply.');
+            break;
+        }
+      });
+
+      setUpdateReadyToRestart(true);
+      setPendingUpdate(null);
+    } catch (err) {
+      console.error('Update install failed:', err);
+      setUpdateStatus('Failed to download/install update.');
+    } finally {
+      setIsDownloadingUpdate(false);
+    }
+  };
+
+  const handleRestartToApplyUpdate = async () => {
+    try {
+      const { relaunch } = await import('@tauri-apps/plugin-process');
+      setUpdateStatus('Restarting to apply update...');
+      await relaunch();
+    } catch (err) {
+      console.error('Failed to restart:', err);
+      setUpdateStatus('Update is installed, but restart failed. Please restart the app manually.');
+    }
+  };
+
   const handleBrowse = async () => {
     const selected = await cmd.pickFolder();
     if (selected) {
@@ -163,18 +195,70 @@ export default function SettingsPanel({
         <div className="flex items-center gap-3">
           <button
             onClick={handleCheckUpdate}
-            disabled={isUpdating}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${isUpdating
+            disabled={isCheckingUpdate || isDownloadingUpdate}
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${isCheckingUpdate || isDownloadingUpdate
                 ? 'bg-mew-highlight/50 text-mew-muted cursor-not-allowed'
                 : 'bg-mew-surface border border-mew-highlight/50 text-mew-text hover:bg-mew-highlight/30'
               }`}
           >
-            {isUpdating ? 'Checking...' : 'Check for Updates'}
+            {isCheckingUpdate ? 'Checking...' : 'Check for Updates'}
           </button>
           {updateStatus && (
             <span className="text-xs text-mew-accent">{updateStatus}</span>
           )}
         </div>
+
+        {pendingUpdate && (
+          <div className="mt-3 p-3 text-xs rounded border border-mew-highlight/40 bg-mew-bg/50">
+            <p className="text-mew-text font-medium mb-2">
+              Update available: v{pendingUpdate.version}
+            </p>
+            {pendingUpdate.body && (
+              <p className="text-mew-muted/80 mb-3 whitespace-pre-wrap">
+                {pendingUpdate.body}
+              </p>
+            )}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleInstallUpdate}
+                disabled={isDownloadingUpdate}
+                className={`px-3 py-1.5 rounded transition-colors ${isDownloadingUpdate
+                    ? 'bg-mew-highlight/50 text-mew-muted cursor-not-allowed'
+                    : 'bg-mew-accent text-white hover:bg-mew-accent/80'
+                  }`}
+              >
+                {isDownloadingUpdate ? 'Installing...' : 'Download and Install'}
+              </button>
+              <button
+                onClick={() => {
+                  setPendingUpdate(null);
+                  setUpdateStatus('Update postponed.');
+                }}
+                disabled={isDownloadingUpdate}
+                className="px-3 py-1.5 rounded border border-mew-highlight/50 text-mew-text hover:bg-mew-highlight/20 transition-colors"
+              >
+                Later
+              </button>
+              {downloadProgress !== null && isDownloadingUpdate && (
+                <span className="text-mew-muted">{downloadProgress}%</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {updateReadyToRestart && (
+          <div className="mt-3 p-3 text-xs rounded border border-mew-highlight/40 bg-mew-bg/50">
+            <p className="text-mew-text mb-2">
+              Update installed. Restart is required to finish applying it.
+            </p>
+            <button
+              onClick={handleRestartToApplyUpdate}
+              className="px-3 py-1.5 rounded bg-mew-accent text-white hover:bg-mew-accent/80 transition-colors"
+            >
+              Restart to Apply Update
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
