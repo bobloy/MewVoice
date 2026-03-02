@@ -136,7 +136,11 @@ export function useLibraryPacks() {
     fetchPacks(filters, 0, false);
   }, [filters, fetchPacks]);
 
-  /** Optimistic vote update — mutates local state, fires API, reverts on error */
+  /**
+   * Optimistic vote update — mutates local state, fires API, reverts on error.
+   * TODO: Track in-flight vote requests per pack and disable repeat clicks until resolve.
+   * This would prevent accidental double-submit jitter on slow connections.
+   */
   const updatePackVote = useCallback(async (packId: string, vote: 1 | -1 | 0) => {
     // Snapshot for rollback
     const prevPacks = packs;
