@@ -64,7 +64,7 @@ export async function convertToGameWav(blob: Blob, volumeAdjustmentDb: number = 
   const rendered = await offlineCtx.startRendering();
 
   // Get samples
-  let samples = rendered.getChannelData(0);
+  const samples = rendered.getChannelData(0);
 
   // TODO: Replace pure Peak Normalization with LUFS (Loudness Units relative to Full Scale) normalization for more consistent perceived loudness across different recordings.
   // 1. Normalize based on PEAK + Adjustment
@@ -75,7 +75,7 @@ export async function convertToGameWav(blob: Blob, volumeAdjustmentDb: number = 
   const MAX_SAFE_PEAK = -0.5;
   const effectiveTarget = Math.min(targetPeakDbfs, MAX_SAFE_PEAK);
 
-  samples = normalizeToPeak(samples, effectiveTarget);
+  normalizeToPeak(samples, effectiveTarget);
 
   const outputDuration = samples.length / TARGET_SAMPLE_RATE;
 
