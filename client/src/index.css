@@ -11,6 +11,9 @@
   --color-parchment: #C4B8A9;       /* Secondary text — warm muted */
   --color-cream: #E8E0D4;           /* Primary text — warm white */
   --color-ember: #C47A4A;           /* CTA buttons, notifications */
+  --color-border: #FFF;             /* Shared UI border color */
+
+  /* TODO(ui): Split border token by emphasis level if we need softer dividers later. */
 }
 
 body {
