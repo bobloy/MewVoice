@@ -29,6 +29,7 @@ export function LibraryBrowser() {
 
   // Infinite scroll sentinel
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const lastUserIdRef = useRef<string | null>(user?.steamId ?? null);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -46,6 +47,13 @@ export function LibraryBrowser() {
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [loadMore]);
+
+  useEffect(() => {
+    const currentUserId = user?.steamId ?? null;
+    if (lastUserIdRef.current === currentUserId) return;
+    lastUserIdRef.current = currentUserId;
+    refresh();
+  }, [user?.steamId, refresh]);
 
   const handleDelete = useCallback(
     async (packId: string) => {
