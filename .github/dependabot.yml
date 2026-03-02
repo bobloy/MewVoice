@@ -2,30 +2,85 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    labels:
+      - dependencies
+    open-pull-requests-limit: 10
+    rebase-strategy: auto
+    groups:
+      github-actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
     schedule:
       interval: weekly
       day: monday
 
   - package-ecosystem: npm
     directory: /client
+    labels:
+      - dependencies
+    open-pull-requests-limit: 10
+    rebase-strategy: auto
+    groups:
+      client-npm-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
     schedule:
       interval: weekly
       day: monday
 
   - package-ecosystem: npm
     directory: /desktop
+    labels:
+      - dependencies
+    open-pull-requests-limit: 10
+    rebase-strategy: auto
+    groups:
+      desktop-npm-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
     schedule:
       interval: weekly
       day: monday
 
   - package-ecosystem: npm
     directory: /worker
+    labels:
+      - dependencies
+    open-pull-requests-limit: 10
+    rebase-strategy: auto
+    groups:
+      worker-npm-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
     schedule:
       interval: weekly
       day: monday
 
   - package-ecosystem: cargo
     directory: /desktop/src-tauri
+    labels:
+      - dependencies
+    open-pull-requests-limit: 10
+    rebase-strategy: auto
+    groups:
+      desktop-cargo-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
     schedule:
       interval: weekly
       day: monday

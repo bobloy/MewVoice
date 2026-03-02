@@ -12,7 +12,7 @@ export function LibraryToolbar({ filters, setFilters, total, isLoggedIn, userSte
   const isMyPacks = !!filters.author && filters.author === userSteamId;
 
   return (
-    <div className="bg-mew-surface rounded-xl p-4 border border-mew-highlight/30 mb-6 space-y-3">
+    <div className="bg-mew-surface rounded-xl p-4 border border-mew-border/30 mb-6 space-y-3">
       {/* Top row: Search + Sort */}
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Search */}
@@ -26,12 +26,12 @@ export function LibraryToolbar({ filters, setFilters, total, isLoggedIn, userSte
             onChange={(e) => setFilters({ q: e.target.value })}
             placeholder="Search packs..."
             maxLength={100}
-            className="w-full bg-mew-bg border border-mew-highlight/50 rounded-lg pl-9 pr-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent text-sm"
+            className="w-full bg-mew-bg border border-mew-border/50 rounded-lg pl-9 pr-4 py-2 text-mew-text placeholder:text-mew-muted/50 focus:outline-none focus:border-mew-accent text-sm"
           />
         </div>
 
         {/* Sort toggle */}
-        <div className="flex rounded-lg border border-mew-highlight/50 overflow-hidden">
+        <div className="flex rounded-lg border border-mew-border/50 overflow-hidden">
           <button
             onClick={() => setFilters({ sort: 'newest' })}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
@@ -61,7 +61,7 @@ export function LibraryToolbar({ filters, setFilters, total, isLoggedIn, userSte
         <select
           value={filters.gender}
           onChange={(e) => setFilters({ gender: e.target.value as LibraryFilters['gender'] })}
-          className="bg-mew-bg border border-mew-highlight/50 rounded-lg px-3 py-1.5 text-sm text-mew-text focus:outline-none focus:border-mew-accent"
+          className="bg-mew-bg border border-mew-border/50 rounded-lg px-3 py-1.5 text-sm text-mew-text focus:outline-none focus:border-mew-accent"
         >
           <option value="all">All Genders</option>
           <option value="male">Male</option>
@@ -74,7 +74,7 @@ export function LibraryToolbar({ filters, setFilters, total, isLoggedIn, userSte
           className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
             filters.hasRecommended
               ? 'bg-green-900/40 text-green-400 border-green-800/50'
-              : 'bg-mew-bg text-mew-muted border-mew-highlight/50 hover:text-mew-text'
+              : 'bg-mew-bg text-mew-muted border-mew-border/50 hover:text-mew-text'
           }`}
         >
           Complete Packs
@@ -86,7 +86,7 @@ export function LibraryToolbar({ filters, setFilters, total, isLoggedIn, userSte
           className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
             filters.minScore === 0
               ? 'bg-mew-accent/20 text-mew-accent border-mew-accent/30'
-              : 'bg-mew-bg text-mew-muted border-mew-highlight/50 hover:text-mew-text'
+              : 'bg-mew-bg text-mew-muted border-mew-border/50 hover:text-mew-text'
           }`}
         >
           Hide Negative
@@ -99,7 +99,7 @@ export function LibraryToolbar({ filters, setFilters, total, isLoggedIn, userSte
             className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
               isMyPacks
                 ? 'bg-mew-accent/20 text-mew-accent border-mew-accent/30'
-                : 'bg-mew-bg text-mew-muted border-mew-highlight/50 hover:text-mew-text'
+                : 'bg-mew-bg text-mew-muted border-mew-border/50 hover:text-mew-text'
             }`}
           >
             My Packs

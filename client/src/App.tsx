@@ -14,7 +14,7 @@ function App() {
   return (
     <div className="min-h-screen bg-mew-bg">
       {/* Header */}
-      <header className="border-b border-mew-highlight/30 bg-mew-surface/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-mew-border/30 bg-mew-surface/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-3xl">🐱</span>
@@ -36,7 +36,7 @@ function App() {
               </NavLink>
             </nav>
 
-            <div className="border-l border-mew-highlight/30 pl-4">
+            <div className="border-l border-mew-border/30 pl-4">
               {loading ? (
                 <div className="w-8 h-8 rounded-full bg-mew-highlight/30 animate-pulse" />
               ) : user ? (
@@ -45,7 +45,7 @@ function App() {
                     <img
                       src={user.avatarUrl}
                       alt={user.personaName}
-                      className="w-8 h-8 rounded-full border border-mew-highlight/50"
+                      className="w-8 h-8 rounded-full border border-mew-border/50"
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-mew-highlight/50 flex items-center justify-center text-xs text-mew-text">
@@ -89,7 +89,7 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-mew-highlight/20 py-6 mt-12">
+      <footer className="border-t border-mew-border/20 py-6 mt-12">
         <p className="text-center text-mew-muted text-sm">
           Community tool — not affiliated with Edmund McMillen or Tyler Glaiel.
           Voice packs are compatible with Mewtator for Mewgenics.
