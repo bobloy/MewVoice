@@ -1,6 +1,7 @@
 {
   "name": "mewvoice-api",
   "version": "1.0.0",
+  "packageManager": "npm@11.11.0",
   "private": true,
   "scripts": {
     "dev": "wrangler dev --local --port 8787",
