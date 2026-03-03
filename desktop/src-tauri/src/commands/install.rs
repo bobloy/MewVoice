@@ -19,7 +19,7 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
 
     let mewvoice_dir = PathBuf::from(&mod_root).join("MewVoice");
 
-    // First pass: find metadata to determine pack identity
+    // Single pass: collect metadata, locate the .gon fallback name, and buffer all audio/voices/ files
     let mut pack_name = String::new();
     let mut author = String::new();
     let mut gender = "male".to_string();
@@ -27,11 +27,17 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
     let mut folder_name = String::new();
     let mut clip_counts: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
     let mut pack_tool_version = String::new();
+    let mut gon_entry_name: Option<String> = None;
+    // (relative_path_within_voices/, file_data)
+    let mut audio_files: Vec<(String, Vec<u8>)> = Vec::new();
 
-    // Try to find description.json or metadata_*.json
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i).map_err(|e| e.to_string())?;
         let name = entry.name().to_string();
+
+        if entry.is_dir() {
+            continue;
+        }
 
         // Read metadata files
         if name == "description.json" || name.starts_with("metadata_") && name.ends_with(".json") {
@@ -72,28 +78,38 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
                     }
                 }
             }
+            continue;
+        }
+
+        // Skip legacy patch files
+        if name.starts_with("data/catgen.gon.") && name.ends_with(".patch") {
+            log::info!("Legacy patch detected (ignored): {}", name);
+            continue;
+        }
+
+        // Collect audio/voices/** files
+        if name.starts_with("audio/voices/") {
+            let relative = name.strip_prefix("audio/voices/").unwrap().to_string();
+
+            // Track the first top-level .gon for folder_name fallback
+            if gon_entry_name.is_none() && name.ends_with(".gon") && !relative.contains('/') {
+                gon_entry_name = Some(name.clone());
+            }
+
+            let mut data = Vec::new();
+            entry.read_to_end(&mut data).map_err(|e| e.to_string())?;
+            audio_files.push((relative, data));
         }
     }
 
-    // If no folder_name from metadata, try to infer from .gon files in the archive
-    // TODO: Refactor to reuse the same archive instead of reopening (currently opens archive twice)
+    // If no folder_name from metadata, infer from the first top-level .gon found
     if folder_name.is_empty() {
-        let mut archive2 = zip::ZipArchive::new(
-            fs::File::open(&zip_path).map_err(|e| e.to_string())?
-        ).map_err(|e| e.to_string())?;
-
-        for i in 0..archive2.len() {
-            let entry = archive2.by_index(i).map_err(|e| e.to_string())?;
-            let name = entry.name().to_string();
-
-            if name.starts_with("audio/voices/") && name.ends_with(".gon") {
-                // e.g., audio/voices/cool_cat.gon → folder_name = "cool_cat"
-                let gon_name = name.strip_prefix("audio/voices/").unwrap();
-                let gon_name = gon_name.strip_suffix(".gon").unwrap();
-                if !gon_name.contains('/') {
-                    folder_name = gon_name.to_string();
-                    break;
-                }
+        if let Some(gon) = gon_entry_name.as_deref() {
+            let stem = gon
+                .strip_prefix("audio/voices/").unwrap_or(gon)
+                .strip_suffix(".gon").unwrap_or(gon);
+            if !stem.contains('/') {
+                folder_name = stem.to_string();
             }
         }
     }
@@ -135,40 +151,15 @@ pub fn install_pack(zip_path: String, mod_root: String) -> Result<String, String
     // The voice_set ID is the folder_name (this is what goes in catgen.gon)
     let voice_set_id = folder_name.clone();
 
-    // Second pass: extract audio files and .gon
-    // TODO: Refactor to reuse the same archive instead of reopening (currently opens archive 3 times)
-    let mut archive3 = zip::ZipArchive::new(
-        fs::File::open(&zip_path).map_err(|e| e.to_string())?
-    ).map_err(|e| e.to_string())?;
+    // Extract all buffered audio/voices/ files collected during the single pass above
+    for (relative, data) in audio_files {
+        let dest = mewvoice_dir.join("audio").join("voices").join(&relative);
 
-    for i in 0..archive3.len() {
-        let mut entry = archive3.by_index(i).map_err(|e| e.to_string())?;
-        let name = entry.name().to_string();
-
-        // Skip directories
-        if entry.is_dir() {
-            continue;
+        if let Some(parent) = dest.parent() {
+            fs::create_dir_all(parent).map_err(|e| e.to_string())?;
         }
 
-        // Skip legacy patch files
-        if name.starts_with("data/catgen.gon.") && name.ends_with(".patch") {
-            log::info!("Legacy patch detected (ignored): {}", name);
-            continue;
-        }
-
-        // Extract audio/voices/** files
-        if name.starts_with("audio/voices/") {
-            let relative = name.strip_prefix("audio/voices/").unwrap();
-            let dest = mewvoice_dir.join("audio").join("voices").join(relative);
-
-            if let Some(parent) = dest.parent() {
-                fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-            }
-
-            let mut data = Vec::new();
-            entry.read_to_end(&mut data).map_err(|e| e.to_string())?;
-            fs::write(&dest, &data).map_err(|e| e.to_string())?;
-        }
+        fs::write(&dest, &data).map_err(|e| e.to_string())?;
     }
 
     // Build result JSON matching InstalledVoicePack interface
