@@ -28,6 +28,14 @@ export function buildVoicePatch(
     return 'voice_sets.append {\n}\n';
   }
 
+  // GON format requires identifiers to be plain alphanumeric tokens (no whitespace, braces, or quotes).
+  const GON_INVALID = /[\s"'{}[\]]/;
+  for (const p of enabled) {
+    if (GON_INVALID.test(p.id)) {
+      throw new Error(`Pack ID "${p.id}" contains characters that are invalid in GON format (no spaces, quotes, or brackets allowed).`);
+    }
+  }
+
   const lines: string[] = [];
 
   for (const id of muteEntries) {
@@ -39,7 +47,6 @@ export function buildVoicePatch(
   }
 
   // TODO: Consider reading any existing catgen.gon.patch and merging lines instead of overwriting, to preserve other mod changes if they exist.
-  // TODO: Add validation to ensure pack IDs don't contain invalid characters for GON format (e.g., spaces, special characters)
   return `voice_sets.append {\n${lines.join('\n')}\n}\n`;
 }
 
