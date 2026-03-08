@@ -18,7 +18,7 @@ import { APP_VERSION } from '@/lib/version';
 
 export default function Sidebar({ activePanel, onNavigate, patchDirty }: SidebarProps) {
   return (
-    <nav className="w-52 min-h-screen bg-mew-surface border-r border-mew-highlight/30 flex flex-col">
+    <nav className="w-52 flex-shrink-0 bg-mew-surface border-r border-mew-highlight/30 flex flex-col">
       <div className="p-4 border-b border-mew-highlight/30">
         <h1 className="text-lg font-semibold text-mew-accent">MewVoice</h1>
         <p className="text-xs text-mew-muted">Voice Pack Manager</p>

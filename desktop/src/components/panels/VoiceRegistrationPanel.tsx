@@ -35,7 +35,8 @@ export default function VoiceRegistrationPanel({
   }
 
   return (
-    <div>
+    <div className="flex flex-col min-h-0 flex-1">
+      <div className="flex-shrink-0">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold">Voice Registration</h2>
@@ -61,7 +62,9 @@ export default function VoiceRegistrationPanel({
           Voice patch is out of sync with your current settings. Click "Regenerate" to apply changes.
         </div>
       )}
+      </div>
 
+      <div className="flex-1 min-h-0 overflow-y-auto">
       {/* Spawn distribution table */}
       {enabledPacks.length > 0 ? (
         <div className="mb-6">
@@ -125,6 +128,7 @@ export default function VoiceRegistrationPanel({
       <p className="mt-3 text-xs text-mew-muted/60">
         Write target: {modRoot}/MewVoice/data/catgen.gon.patch
       </p>
+      </div>
     </div>
   );
 }
