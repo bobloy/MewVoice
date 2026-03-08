@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { AudioClip } from '@/types/voicepack';
 import { decodeAudio, trimAudio, validateAudioClip } from '@/lib/audio';
+import { convertToGameWav } from '@/lib/audioConverter';
 
 interface TrimModalProps {
   clip: AudioClip;
@@ -197,8 +198,6 @@ export function TrimModal({ clip, onSave, onClose }: TrimModalProps) {
       // This file manages the "editing".
 
       // Let's add the import and use it.
-      // TODO: Refactor this dynamic import. If the bundle size isn't a huge issue, just include it as a standard top-level import to avoid runtime delays during save.
-      const { convertToGameWav } = await import('@/lib/audioConverter');
       const { wavBlob } = await convertToGameWav(trimmedBlob, volumeDb);
 
       // Re-validate the NEW blob
