@@ -30,6 +30,8 @@ export function useLibraryPacks() {
   const fetchIdRef = useRef(0);
   // Track whether initial load is done
   const hasLoadedRef = useRef(false);
+  // Track packs with an in-flight vote request to prevent double-submit
+  const votingPackIds = useRef(new Set<string>());
   const searchQueryRef = useRef(filters.q);
   // Keep latest non-search filters for q-only debounced fetches
   const nonSearchFiltersRef = useRef({
@@ -138,10 +140,12 @@ export function useLibraryPacks() {
 
   /**
    * Optimistic vote update — mutates local state, fires API, reverts on error.
-   * TODO: Track in-flight vote requests per pack and disable repeat clicks until resolve.
-   * This would prevent accidental double-submit jitter on slow connections.
+   * Ignores repeat clicks while a request for the same pack is in flight.
    */
   const updatePackVote = useCallback(async (packId: string, vote: 1 | -1 | 0) => {
+    if (votingPackIds.current.has(packId)) return;
+    votingPackIds.current.add(packId);
+
     // Snapshot for rollback
     const prevPacks = packs;
 
@@ -166,6 +170,8 @@ export function useLibraryPacks() {
     } catch {
       // Revert on failure
       setPacks(prevPacks);
+    } finally {
+      votingPackIds.current.delete(packId);
     }
   }, [packs]);
 

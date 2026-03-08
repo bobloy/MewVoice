@@ -6,6 +6,8 @@ export interface Env {
   STEAM_API_KEY: string;
   SITE_ORIGIN: string;
   DEV_STEAM_ID?: string;
+  /** Cache TTL in seconds for anonymous pack-list responses. Defaults to 60. */
+  CACHE_TTL_SECONDS?: string;
 }
 
 /** Decoded JWT payload */
