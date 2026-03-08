@@ -34,8 +34,19 @@
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
-      "icons/icon.ico"
-    ]
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libappindicator3-1"],
+        "section": "games",
+        "desktopTemplate": null
+      },
+      "appimage": {
+        "bundleMediaFramework": true
+      }
+    }
   },
   "plugins": {
     "updater": {

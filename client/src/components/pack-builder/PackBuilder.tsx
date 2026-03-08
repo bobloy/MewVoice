@@ -35,15 +35,10 @@ export function PackBuilder() {
   const packAuthor = pack.author || user?.personaName || '';
 
   // Session persistence -------------------------------------------------------
-  const [resumeModalSavedAt, setResumeModalSavedAt] = useState<Date | null>(null);
+  const [resumeModalSavedAt, setResumeModalSavedAt] = useState<Date | null>(() =>
+    hasSession() ? sessionSavedAt() : null
+  );
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // On mount: check for a saved session and prompt the user.
-  useEffect(() => {
-    if (hasSession()) {
-      setResumeModalSavedAt(sessionSavedAt());
-    }
-  }, []);
 
   // Auto-save whenever the pack changes (debounced 1 s).
   // Only persist once the user has at least one clip so we don't overwrite a
