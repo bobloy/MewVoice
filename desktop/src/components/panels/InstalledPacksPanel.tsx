@@ -204,6 +204,7 @@ function PackRow({
   onSetFrequency: (freq: number) => void;
   onUninstall: () => void;
 }) {
+  const [confirmUninstall, setConfirmUninstall] = useState(false);
   const totalClips = pack.clipCounts
     ? Object.values(pack.clipCounts).reduce((sum, n) => sum + n, 0)
     : 0;
@@ -277,17 +278,36 @@ function PackRow({
 
       {/* Uninstall */}
       {!pack.isBasePack && (
-        <button
-          onClick={() => {
-            if (confirm(`Uninstall "${pack.name}"? This removes the voice files from the mod folder.`)) {
-              onUninstall();
-            }
-          }}
-          className="text-red-400/60 hover:text-red-400 text-sm px-1 flex-shrink-0 mt-1"
-          title="Uninstall pack"
-        >
-          Remove
-        </button>
+        confirmUninstall ? (
+          <div className="flex flex-col items-end gap-1.5 flex-shrink-0 mt-1">
+            <p className="text-xs text-mew-muted">Also delete from disk?</p>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setConfirmUninstall(false)}
+                className="px-2 py-1 text-xs rounded border border-mew-highlight/50 text-mew-muted hover:text-mew-text hover:bg-mew-highlight/20 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmUninstall(false);
+                  onUninstall();
+                }}
+                className="px-2 py-1 text-xs rounded border border-red-400/50 text-red-300 hover:text-red-200 hover:bg-red-900/20 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmUninstall(true)}
+            className="text-red-400/60 hover:text-red-400 text-sm px-1 flex-shrink-0 mt-1"
+            title="Remove pack"
+          >
+            Remove
+          </button>
+        )
       )}
     </div>
   );
