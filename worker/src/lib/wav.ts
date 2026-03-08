@@ -39,10 +39,24 @@ export function validateWav(data: ArrayBuffer): WavInfo {
     throw new Error('Invalid WAV (missing fmt chunk)');
   }
 
-  // TODO: Add better support or explicit error messages for Float PCM (format 3) or other non-standard encodings to guide the user.
   const audioFormat = view.getUint16(20, true);
+  if (audioFormat === 3) {
+    throw new Error(
+      'Invalid WAV format: IEEE Float PCM (format 3) is not supported. ' +
+      'Please re-export your audio as 16-bit integer PCM (format 1).',
+    );
+  }
+  if (audioFormat === 6 || audioFormat === 7) {
+    throw new Error(
+      `Invalid WAV format: ${audioFormat === 6 ? 'A-law' : 'μ-law'} encoding is not supported. ` +
+      'Please re-export your audio as 16-bit integer PCM.',
+    );
+  }
   if (audioFormat !== 1) {
-    throw new Error(`Invalid WAV format (expected PCM=1, got ${audioFormat})`);
+    throw new Error(
+      `Invalid WAV format (got ${audioFormat}, expected PCM=1). ` +
+      'Please re-export your audio as 16-bit integer PCM.',
+    );
   }
 
   const channels = view.getUint16(22, true);

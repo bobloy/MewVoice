@@ -143,13 +143,18 @@ export function encodeWav(samples: Float32Array, sampleRate: number): Blob {
   writeString(view, 36, 'data');
   view.setUint32(40, dataLength, true);
 
-  // Write PCM samples (convert float32 to int16)
+  // Write PCM samples (convert float32 to int16 with TPDF dithering).
+  // TPDF (Triangular Probability Density Function) dithering adds shaped noise
+  // before quantization, trading a tiny amount of broadband noise for the
+  // elimination of harmonic distortion introduced by simple truncation/rounding.
   let offset = 44;
   for (let i = 0; i < samples.length; i++) {
     const s = Math.max(-1, Math.min(1, samples[i]));
-    // TODO: Add dithering for extra quality instead of simple rounding, especially since we are down-converting to 16-bit.
-    const val = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    view.setInt16(offset, val, true);
+    // Two independent uniform random values → difference has a triangular distribution
+    // over (-1, 1), i.e. one LSB peak-to-peak of dither noise.
+    const dither = Math.random() - Math.random();
+    const raw = (s < 0 ? s * 0x8000 : s * 0x7FFF) + dither;
+    view.setInt16(offset, Math.round(Math.max(-32768, Math.min(32767, raw))), true);
     offset += 2;
   }
 

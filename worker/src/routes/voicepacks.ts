@@ -292,10 +292,10 @@ voicepackRoutes.get('/', async (c) => {
     hasMore: offset + limit < total,
   });
 
-  // Cache anonymous responses for 1 minute
-  // TODO: Make this TTL configurable via environment variables.
+  // Cache anonymous responses; TTL is configurable via CACHE_TTL_SECONDS env var (default 60 s).
+  const cacheTtl = Math.max(0, parseInt(c.env.CACHE_TTL_SECONDS || '60', 10) || 60);
   if (!user) {
-    response.headers.set('Cache-Control', 'public, max-age=60');
+    response.headers.set('Cache-Control', `public, max-age=${cacheTtl}`);
     c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
   } else {
     response.headers.set('Cache-Control', 'private, no-cache');

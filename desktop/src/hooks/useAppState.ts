@@ -169,9 +169,10 @@ export function useAppState() {
     try {
       const packs = await cmd.scanInstalledPacks(state.mewtatorModRoot);
       setState((s) => {
-        // Merge scanned packs: keep existing state for known packs, add new ones
-        // TODO: Also handle packs that were deleted from disk - currently only adds/updates, never removes
         const existing = new Map(s.packs.map((p) => [p.id, p]));
+        // Update/add custom packs found on disk, preserving user settings for known packs.
+        // Custom packs absent from scan results were deleted from disk and are dropped.
+        // Base packs are not managed by MewVoice and are always preserved.
         const merged = packs.map((scanned) => {
           const prev = existing.get(scanned.id);
           if (prev) {
@@ -180,7 +181,8 @@ export function useAppState() {
           }
           return scanned;
         });
-        return { ...s, packs: merged };
+        const basePacks = s.packs.filter((p) => p.isBasePack);
+        return { ...s, packs: [...basePacks, ...merged] };
       });
       setError(null);
     } catch (e) {

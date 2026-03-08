@@ -117,8 +117,10 @@ export default function SettingsPanel({
   };
 
   return (
-    <div className="max-w-lg">
-      <h2 className="text-xl font-semibold mb-6">Settings</h2>
+    <div className="flex flex-col min-h-0 flex-1">
+      <h2 className="flex-shrink-0 text-xl font-semibold mb-6">Settings</h2>
+
+      <div className="flex-1 min-h-0 overflow-y-auto max-w-lg">
 
       {/* Mod root path */}
       <div className="mb-6">
@@ -259,6 +261,7 @@ export default function SettingsPanel({
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

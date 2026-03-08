@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   VoicePack,
   VoiceAction,
@@ -9,9 +9,11 @@ import {
   ACTION_RECOMMENDED_CLIPS,
 } from '@/types/voicepack';
 import { ActionRecorder } from '@/components/recorder/ActionRecorder';
+import { ResumeSessionModal } from '@/components/pack-builder/ResumeSessionModal';
 import { uploadVoicePack, publishVoicePack } from '@/lib/api';
 import { convertToGameWav } from '@/lib/audioConverter';
 import { useAuth } from '@/hooks/useAuth';
+import { hasSession, sessionSavedAt, saveSession, loadSession, clearSession } from '@/lib/sessionCache';
 
 function createEmptyClips(): Record<VoiceAction, AudioClip[]> {
   const clips: Partial<Record<VoiceAction, AudioClip[]>> = {};
@@ -31,6 +33,46 @@ export function PackBuilder() {
   });
 
   const packAuthor = pack.author || user?.personaName || '';
+
+  // Session persistence -------------------------------------------------------
+  const [resumeModalSavedAt, setResumeModalSavedAt] = useState<Date | null>(null);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // On mount: check for a saved session and prompt the user.
+  useEffect(() => {
+    if (hasSession()) {
+      setResumeModalSavedAt(sessionSavedAt());
+    }
+  }, []);
+
+  // Auto-save whenever the pack changes (debounced 1 s).
+  // Only persist once the user has at least one clip so we don't overwrite a
+  // real session with a blank slate on initial render.
+  useEffect(() => {
+    const totalClipsNow = Object.values(pack.clips).reduce((s, a) => s + a.length, 0);
+    if (totalClipsNow === 0) return;
+
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      saveSession(pack);
+    }, 1000);
+
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  }, [pack]);
+
+  const handleResume = useCallback(async () => {
+    const saved = await loadSession();
+    if (saved) setPack(saved);
+    setResumeModalSavedAt(null);
+  }, []);
+
+  const handleDiscard = useCallback(() => {
+    clearSession();
+    setResumeModalSavedAt(null);
+  }, []);
+  // ---------------------------------------------------------------------------
 
   const [buildStatus, setBuildStatus] = useState<'idle' | 'converting' | 'building' | 'done' | 'error'>('idle');
   const [conversionProgress, setConversionProgress] = useState({ done: 0, total: 0 });
@@ -174,6 +216,7 @@ export function PackBuilder() {
       setBuildId(result.id);
       setDownloadUrl(result.downloadUrl);
       setBuildStatus('done');
+      clearSession();
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Build failed');
       setBuildStatus('error');
@@ -198,6 +241,7 @@ export function PackBuilder() {
   };
 
   const handleReset = () => {
+    clearSession();
     setPack({
       name: '',
       author: user?.personaName || '',
@@ -214,6 +258,13 @@ export function PackBuilder() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {resumeModalSavedAt && (
+        <ResumeSessionModal
+          savedAt={resumeModalSavedAt}
+          onResume={handleResume}
+          onDiscard={handleDiscard}
+        />
+      )}
       {/* Pack metadata — hidden after build since ZIP is already created */}
       {buildStatus !== 'done' && (
         <>
