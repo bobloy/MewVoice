@@ -12,17 +12,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "hono": "^4.12.9",
-    "jose": "^6.2.2",
+    "hono": "^4.12.15",
+    "jose": "^6.2.3",
     "jszip": "^3.10.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@cloudflare/workers-types": "^4.20260317.1",
-    "eslint": "^10.1.0",
-    "globals": "^17.4.0",
+    "@cloudflare/workers-types": "^4.20260426.1",
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0",
     "typescript": "^5.7.0",
-    "typescript-eslint": "^8.57.2",
-    "wrangler": "^4.76.0"
+    "typescript-eslint": "^8.59.1",
+    "wrangler": "^4.85.0"
   }
 }
